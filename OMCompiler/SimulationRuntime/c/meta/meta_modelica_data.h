@@ -36,6 +36,20 @@
 #include "../util/omc_init.h"
 #include "../util/base_array.h"
 
+#ifdef __EMSCRIPTEN__
+/* Single-threaded WASM: no real pthread TLS. Use a global threadData. */
+#include <pthread.h>
+extern void *_omc_wasm_threadData;
+#undef pthread_getspecific
+#undef pthread_setspecific
+#undef pthread_once
+#undef pthread_mutex_init
+#define pthread_getspecific(key) (_omc_wasm_threadData)
+#define pthread_setspecific(key, val) ((_omc_wasm_threadData = (void*)(val)), 0)
+#define pthread_once(once, init) ((init)(), 0)
+#define pthread_mutex_init(m, attr) (0)
+#endif
+
 /*
  *
  * adrpo: define this to have mmk_mk_* function tracing
