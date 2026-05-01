@@ -10,15 +10,23 @@ jobs:
   build:
     if: ${{ !github.event.repository.fork }}
     runs-on: ubuntu-latest
+    env:
+      OMVERSION : ''
     steps:
       - uses: actions/checkout@v6
         with:
-          submodules: true
+          fetch-depth: 0
+          fetch-tags: true
+          submodules: recursive
 
-      - name: Create zip
+      - name: Build Assets
         run: |
+          export OMVERSION=`git describe --tags --match "v*.*" --always`
+          echo Version: $OMVERSION
           cd ..
-          zip ${{ github.event.repository.name }}/${{ github.event.repository.name }}-nightly.zip ${{ github.event.repository.name }} -r -x '*/.git/*'
+          ln -s ${{ github.event.repository.name }} ${{ github.event.repository.name }}-$OMVERSION
+          zip ${{ github.event.repository.name }}/${{ github.event.repository.name }}-nightly.zip ${{ github.event.repository.name }}-$OMVERSION -r -x '*/.git/*'
+          rm -f ${{ github.event.repository.name }}-$OMVERSION
 
       - uses: pyTooling/Actions/releaser@r0
         with:

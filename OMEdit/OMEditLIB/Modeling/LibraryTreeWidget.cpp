@@ -1,33 +1,38 @@
 /*
  * This file is part of OpenModelica.
  *
- * Copyright (c) 1998-CurrentYear, Open Source Modelica Consortium (OSMC),
+ * Copyright (c) 1998-2026, Open Source Modelica Consortium (OSMC),
  * c/o Linköpings universitet, Department of Computer and Information Science,
  * SE-58183 Linköping, Sweden.
  *
  * All rights reserved.
  *
- * THIS PROGRAM IS PROVIDED UNDER THE TERMS OF GPL VERSION 3 LICENSE OR
- * THIS OSMC PUBLIC LICENSE (OSMC-PL) VERSION 1.2.
+ * THIS PROGRAM IS PROVIDED UNDER THE TERMS OF AGPL VERSION 3 LICENSE OR
+ * THIS OSMC PUBLIC LICENSE (OSMC-PL) VERSION 1.8.
  * ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS PROGRAM CONSTITUTES
- * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GPL VERSION 3,
- * ACCORDING TO RECIPIENTS CHOICE.
+ * RECIPIENT'S ACCEPTANCE OF THE OSMC PUBLIC LICENSE OR THE GNU AGPL
+ * VERSION 3, ACCORDING TO RECIPIENTS CHOICE.
  *
- * The OpenModelica software and the Open Source Modelica
- * Consortium (OSMC) Public License (OSMC-PL) are obtained
- * from OSMC, either from the above address,
- * from the URLs: http://www.ida.liu.se/projects/OpenModelica or
- * http://www.openmodelica.org, and in the OpenModelica distribution.
- * GNU version 3 is obtained from: http://www.gnu.org/copyleft/gpl.html.
+ * The OpenModelica software and the OSMC (Open Source Modelica Consortium)
+ * Public License (OSMC-PL) are obtained from OSMC, either from the above
+ * address, from the URLs:
+ * http://www.openmodelica.org or
+ * https://github.com/OpenModelica/ or
+ * http://www.ida.liu.se/projects/OpenModelica,
+ * and in the OpenModelica distribution.
+ *
+ * GNU AGPL version 3 is obtained from:
+ * https://www.gnu.org/licenses/licenses.html#GPL
  *
  * This program is distributed WITHOUT ANY WARRANTY; without
- * even the implied warranty of  MERCHANTABILITY or FITNESS
+ * even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE, EXCEPT AS EXPRESSLY SET FORTH
  * IN THE BY RECIPIENT SELECTED SUBSIDIARY LICENSE CONDITIONS OF OSMC-PL.
  *
  * See the full OSMC Public License conditions for more details.
  *
  */
+
 /*
  * @author Adeel Asghar <adeel.asghar@liu.se>
  */
@@ -1145,17 +1150,35 @@ Qt::ItemFlags LibraryTreeModel::flags(const QModelIndex &index) const
  */
 LibraryTreeItem* LibraryTreeModel::findLibraryTreeItem(const QString &name, LibraryTreeItem *pLibraryTreeItem, Qt::CaseSensitivity caseSensitivity) const
 {
-  QString path = name;
   if (!pLibraryTreeItem) {
     pLibraryTreeItem = mpRootLibraryTreeItem;
   } else if (pLibraryTreeItem->getNameStructure().compare(name, caseSensitivity) == 0) {
     return pLibraryTreeItem;
-  } else {
-    // strip the prefix of the path if it is same as the name structure of the current item
-    StringHandler::removeTypePrefix(path, pLibraryTreeItem->getNameStructure());
   }
 
-  // if lookup is called for text files then do the linear search
+  // Strip the prefix of the path if it matches the name structure of the current item
+  QString path = name;
+  StringHandler::removeTypePrefix(path, pLibraryTreeItem->getNameStructure());
+
+  // 1. Try incremental (qualified name) lookup first — cheap, no I/O
+  if (!path.isEmpty()) {
+    QStringList parts = StringHandler::splitPath(path);
+    if (!parts.isEmpty()) {
+      LibraryTreeItem *pCandidate = pLibraryTreeItem;
+      for (const QString &part : parts) {
+        const QString item = pCandidate->getNameStructure().isEmpty() ? part : pCandidate->getNameStructure() + "." + part;
+        pCandidate = findLibraryTreeItemOneLevel(item, pCandidate, caseSensitivity);
+        if (!pCandidate) {
+          break;  // Qualified path broken, fall through to file lookup
+        }
+      }
+      if (pCandidate) {
+        return pCandidate;  // Qualified name resolved successfully
+      }
+    }
+  }
+
+  // 2. Fall back to file-based linear search — only pay the QFile::exists cost if needed
   if (QFile::exists(name)) {
     QStack<LibraryTreeItem*> stack;
     stack.push(pLibraryTreeItem);
@@ -1168,27 +1191,9 @@ LibraryTreeItem* LibraryTreeModel::findLibraryTreeItem(const QString &name, Libr
         stack.push(pCurrentLibraryTreeItem->childAt(i));
       }
     }
-    return nullptr;
-  } else {  // do the incremental lookup.
-    if (path.isEmpty()) {
-      return nullptr;
-    }
-
-    QStringList parts = StringHandler::splitPath(path);
-    if (parts.isEmpty()) {
-      return nullptr;
-    }
-
-    for (const QString &part : parts) {
-      const QString item = pLibraryTreeItem->getNameStructure().isEmpty() ? part : pLibraryTreeItem->getNameStructure() + "." + part;
-      pLibraryTreeItem = findLibraryTreeItemOneLevel(item, pLibraryTreeItem, caseSensitivity);
-      if (!pLibraryTreeItem) {
-        return nullptr;  // Path broken
-      }
-    }
-
-    return pLibraryTreeItem;
   }
+
+  return nullptr;
 }
 
 /*!

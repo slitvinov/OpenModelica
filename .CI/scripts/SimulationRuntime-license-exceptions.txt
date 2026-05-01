@@ -29,6 +29,10 @@
 
 # [build] generated files / build artifacts
 OMCompiler/revision.h
+OMCompiler/revision.h.in
+OMCompiler/omc_config.unix.h
+OMCompiler/omc_config.unix.h.in
+*/omc_config*.h.in
 
 # =============================================================================
 # OMCompiler/Compiler
@@ -37,6 +41,7 @@ OMCompiler/revision.h
 # [3rd-party]
 OMCompiler/tools/
 !OMCompiler/tools/debugging
+!OMCompiler/tools/xml
 
 # [build] generated files / build artifacts
 OMCompiler/Compiler/boot/bomc
@@ -73,6 +78,11 @@ OMCompiler/Compiler/Template/Unparsing.mo
 OMCompiler/Compiler/Template/VisualXMLTpl.mo
 
 OMCompiler/Compiler/Util/MessagePack.mo
+OMCompiler/Compiler/Util/Autoconf.mo
+
+OMCompiler/Compiler/*.mos
+OMCompiler/Parser/*.mos
+OMCompiler/toJulia/*.mos
 
 # Martin Sjölund - Part of a Modelica library we don't have OSMC-PL for
 OMCompiler/Compiler/boot/include/msgpack-modelica.h
@@ -90,6 +100,9 @@ OMCompiler/Compiler/runtime/matchmaker.h
 
 # ITI GmbH Dresden - SimulationResultsCmpTubes
 OMCompiler/Compiler/runtime/SimulationResultsCmpTubes.c
+
+# Palard Julien - is_utf8
+OMCompiler/Compiler/runtime/is_utf8.*
 
 OMCompiler/scripts/parallel-wine-msvc.py
 
@@ -256,6 +269,63 @@ testsuite/
 
 doc/
 OMCompiler/Examples/
+!OMCompiler/Examples/GenerateDoc.mos
+
+# =============================================================================
+# OMEdit
+# =============================================================================
+
+# Tests
+OMEdit/Testsuite/**/*.mo
+
+# [3rd-party] Marcin Kalicinski - rapidxml
+OMEdit/OMEditLIB/Animation/rapidxml.hpp
+
+# [3rd-party] Cloud Wu - backtrace
+OMEdit/OMEditLIB/CrashReport/backtrace.*
+
+# [3rd-party] Google - Diff Match and Patch
+OMEdit/OMEditLIB/TransformationalDebugger/diff_match_patch.*
+
+# =============================================================================
+# OMNotebook
+# =============================================================================
+
+OMNotebook/OMNotebook/OMNotebookGUI/OMNotebookGUI.pro
+
+# =============================================================================
+# OMParser
+# =============================================================================
+
+OMParser/3rdParty/
+OMParser/test/
+
+# =============================================================================
+# OMOptim
+# =============================================================================
+
+# [3rd-party] Thales group / INRIA / DOLPHIN — ParadisEO (LGPL 2.1 & CeCILL)
+OMOptim/ParadisEO-2.0.1/
+# [3rd-party] DOLPHIN Project-Team, INRIA Lille — CeCILL license
+OMOptim/OMOptim/Core/Optim/EA/SA1/SA1moFullEvalByCopy.h
+# CEP-ARMINES copyright — mixed OSMC-PL + CEP-ARMINES header
+OMOptim/OMOptim/GUI/Dialogs/AboutOMOptim.cpp
+# [3rd-party] Nokia Corporation — Qt Toolkit example (LGPL 2.1)
+OMOptim/OMOptim/GUI/Scene/arrow.cpp
+OMOptim/OMOptim/GUI/Scene/arrow.h
+OMOptim/OMOptim/GUI/Scene/diagramitem.cpp
+OMOptim/OMOptim/GUI/Scene/diagramitem.h
+OMOptim/OMOptim/GUI/Scene/diagramscene.cpp
+OMOptim/OMOptim/GUI/Scene/diagramscene.h
+OMOptim/OMOptim/GUI/Scene/diagramtextitem.cpp
+OMOptim/OMOptim/GUI/Scene/diagramtextitem.h
+
+# =============================================================================
+# OMOptim
+# =============================================================================
+
+# [3rd-party] Uwe Rathmann / Qwt project — Qwt License 1.0
+OMPlot/qwt/
 
 # =============================================================================
 # Submodules
@@ -264,14 +334,7 @@ OMCompiler/Examples/
 
 libraries/
 OMCompiler/3rdParty/
-#!OMCompiler/3rdParty/ryu/ryu/om_format.*
-OMEdit/
-OMNotebook/
-OMOptim/
-OMParser/
-OMPlot/
-OMSens_Qt/
-OMShell/
+!OMCompiler/3rdParty/ryu/ryu/om_format.*
 OMSimulator/
 
 # =============================================================================
