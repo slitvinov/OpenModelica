@@ -192,7 +192,6 @@ void initDumpSystem()
     omc_lastType[i] = 0;
   }
 
-  omc_useStream[OMC_LOG_STDOUT] = 1;
   omc_useStream[OMC_LOG_ASSERT] = 1;
   omc_useStream[OMC_LOG_SUCCESS] = 1;
 }
