@@ -1430,7 +1430,6 @@ ModelInstance* FMIX(Instantiate)(fmiXString instanceName, OMC_FmuType fmuType, f
   }
 
   /* initialize modelData */
-  omc_useStream[OMC_LOG_STDOUT] = 1;
   omc_useStream[OMC_LOG_ASSERT] = 1;
   FMIX_SETUP_DATA_STRUC(comp->fmuData, comp->threadData);
   init = omc_fmu_init_load(comp->fmuData->modelData);
@@ -1874,7 +1873,6 @@ fmiXStatus FMIX(Reset)(fmiXComponent c)
   }
 
   /* Initialize modelData */
-  omc_useStream[OMC_LOG_STDOUT] = 1;
   omc_useStream[OMC_LOG_ASSERT] = 1;
   FMIX_SETUP_DATA_STRUC(comp->fmuData, comp->threadData);
 #ifdef OMC_FMI_LS_DAE
