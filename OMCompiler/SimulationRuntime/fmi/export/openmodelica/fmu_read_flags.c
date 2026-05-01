@@ -217,7 +217,6 @@ int FMI2CS_initializeSolverData(ModelInstance* comp)
       break;
       case S_CVODE:
 #ifdef WITH_SUNDIALS
-      omc_useStream[OMC_LOG_SOLVER] = 1;
       CVODE_SOLVER* cvodeData = NULL;
       FILTERED_LOG(comp, fmi2OK, LOG_ALL, "Initializing CVODE ODE Solver")
       cvodeData = (CVODE_SOLVER*) functions->allocateMemory(1, sizeof(CVODE_SOLVER));
@@ -230,7 +229,6 @@ int FMI2CS_initializeSolverData(ModelInstance* comp)
         retValue = cvode_solver_initial(data, threadData, solverInfo, cvodeData, 1 /* is FMI */);   /* TODO: cvode_solver_initial needs to use malloc and free from fmi2CallbackFunctions */
       }
       solverInfo->solverData = cvodeData;
-      omc_useStream[OMC_LOG_SOLVER] = 0;
 #else
       solverInfo->solverData = NULL;
       FILTERED_LOG(comp, fmi2Fatal, LOG_STATUSFATAL, "fmi2Instantiate: FMU not compiled with SUNDIALS but solver CVODE selected.")
