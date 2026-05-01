@@ -3330,11 +3330,7 @@ template getInfoArgsFMU(String str, builtin.SourceInfo info)
   match info
     case SOURCEINFO(__) then
       <<
-      <%str%>.filename = "<%Util.escapeModelicaStringToCString(fileName)%>";
-      <%str%>.lineStart = <%lineNumberStart%>;
-      <%str%>.colStart = <%columnNumberStart%>;
-      <%str%>.lineEnd = <%lineNumberEnd%>;
-      <%str%>.colEnd = <%columnNumberEnd%>;
+      <%str%>.filename = "";
       <%str%>.readonly = <%if isReadOnly then 1 else 0%>;
       >>
 end getInfoArgsFMU;
@@ -3343,6 +3339,17 @@ template ScalarVariableFMU(SimVar simVar, String classType)
  "Generates code for ScalarVariable file for FMU target."
 ::=
   match simVar
+    case SIMVAR(source = SOURCE(info = info), causality = SOME(SimCodeVar.CALCULATED_PARAMETER(__))) then
+      let valueReference = System.tmpTick()
+      let ci = System.tmpTickIndex(2)
+      let infostr = 'modelData-><%classType%>[<%ci%>].info'
+      let attrstr = 'modelData-><%classType%>[<%ci%>].attribute'
+      <<
+      <%infostr%>.id = <%valueReference%>;
+      <%infostr%>.name = "<%Util.escapeModelicaStringToCString(crefStrNoUnderscore(name))%>";
+      <%infostr%>.info.filename = "";
+      <%ScalarVariableTypeStartOnlyFMU(attrstr, initialValue, nominalValue, type_)%>
+      >>
     case SIMVAR(source = SOURCE(info = info)) then
       let valueReference = System.tmpTick()
       let ci = System.tmpTickIndex(2)
@@ -3352,11 +3359,28 @@ template ScalarVariableFMU(SimVar simVar, String classType)
       <<
       <%infostr%>.id = <%valueReference%>;
       <%infostr%>.name = "<%Util.escapeModelicaStringToCString(crefStrNoUnderscore(name))%>";
-      <%infostr%>.comment = "<%description%>";
+      <%if description then '<%infostr%>.comment = "<%description%>";'%>
       <%getInfoArgsFMU(infostr+".info", info)%>
       <%ScalarVariableTypeFMU(attrstr, unit, displayUnit, minValue, maxValue, initialValue, nominalValue, isFixed, type_)%>
       >>
 end ScalarVariableFMU;
+
+template ScalarVariableTypeStartOnlyFMU(String attrstr, Option<DAE.Exp> startValue, Option<DAE.Exp> nominalValue, DAE.Type type_)
+ "Minimal emission for calculatedParameter: just the start value."
+::=
+  match type_
+    case T_REAL(__) then
+      'put_real_element(<%optInitValFMU(startValue,"0.0")%>, 0, &<%attrstr%>.start);'
+    case T_INTEGER(__) then
+      '<%attrstr%>.start = <%optInitValFMU(startValue,"0")%>;'
+    case T_BOOL(__) then
+      '<%attrstr%>.start = <%optInitValFMU(startValue,"0")%>;'
+    case T_STRING(__) then
+      '<%attrstr%>.start = <%optInitValFMU(startValue,"mmc_mk_scon(\"\")")%>;'
+    case T_ENUMERATION(__) then
+      '<%attrstr%>.start = <%optInitValFMU(startValue,"0")%>;'
+    else error(sourceInfo(), 'ScalarVariableTypeStartOnlyFMU: <%unparseType(type_)%>')
+end ScalarVariableTypeStartOnlyFMU;
 
 template optInitValFMU(Option<Exp> exp, String default)
 ::=
@@ -3380,12 +3404,12 @@ template ScalarVariableTypeFMU(String attrstr, String unit, String displayUnit, 
   match type_
     case T_REAL(__) then
       <<
-      <%attrstr%>.unit = "<%Util.escapeModelicaStringToCString(unit)%>";
-      <%attrstr%>.displayUnit = "<%Util.escapeModelicaStringToCString(displayUnit)%>";
+      <%if unit         then '<%attrstr%>.unit = "<%Util.escapeModelicaStringToCString(unit)%>";'%>
+      <%if displayUnit  then '<%attrstr%>.displayUnit = "<%Util.escapeModelicaStringToCString(displayUnit)%>";'%>
       put_real_element(<%optInitValFMU(minValue,"-DBL_MAX")%>, 0, &<%attrstr%>.min);
       put_real_element(<%optInitValFMU(maxValue,"DBL_MAX")%>, 0, &<%attrstr%>.max);
-      <%attrstr%>.fixed = <%if isFixed then 1 else 0%>;
-      <%attrstr%>.useNominal = <%if nominalValue then 1 else 0%>;
+      <%if isFixed      then '<%attrstr%>.fixed = 1;'%>
+      <%if nominalValue then '<%attrstr%>.useNominal = 1;'%>
       put_real_element(<%optInitValFMU(nominalValue,"1.0")%>, 0, &<%attrstr%>.nominal);
       put_real_element(<%optInitValFMU(startValue,"0.0")%>, 0, &<%attrstr%>.start);
       >>
@@ -3393,12 +3417,12 @@ template ScalarVariableTypeFMU(String attrstr, String unit, String displayUnit, 
       <<
       <%attrstr%>.min = <%optInitValFMU(minValue,"-LONG_MAX")%>;
       <%attrstr%>.max = <%optInitValFMU(maxValue,"LONG_MAX")%>;
-      <%attrstr%>.fixed = <%if isFixed then 1 else 0%>;
+      <%if isFixed      then '<%attrstr%>.fixed = 1;'%>
       <%attrstr%>.start = <%optInitValFMU(startValue,"0")%>;
       >>
     case T_BOOL(__) then
       <<
-      <%attrstr%>.fixed = <%if isFixed then 1 else 0%>;
+      <%if isFixed      then '<%attrstr%>.fixed = 1;'%>
       <%attrstr%>.start = <%optInitValFMU(startValue,"0")%>;
       >>
     case T_STRING(__) then
