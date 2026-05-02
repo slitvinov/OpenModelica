@@ -1,0 +1,73 @@
+name: macos
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            arch: arm64
+          - runner: macos-13
+            arch: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          brew install autoconf automake boost cmake make openjdk \
+                       open-scene-graph pkg-config flang
+          brew install --cask | true
+
+      - name: Configure
+        run: |
+          export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
+          cmake -S . -B build_cmake \
+            -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_Fortran_COMPILER=$(brew --prefix flang)/bin/flang \
+            -DOM_OMC_ENABLE_FORTRAN=ON \
+            -DOM_OMC_ENABLE_OPTIMIZATION=OFF -DOM_OMC_ENABLE_MOO=OFF \
+            -DOM_OMC_ENABLE_CPP_RUNTIME=OFF -DOM_OMC_ENABLE_OMNIORB=OFF \
+            -DOM_OMC_ENABLE_PRIMME=OFF \
+            -DOM_ENABLE_GUI_CLIENTS=OFF -DOM_ENABLE_ENCRYPTION=OFF \
+            -DCMAKE_PREFIX_PATH=/opt/homebrew
+
+      - name: Build
+        run: cmake --build build_cmake --parallel 4 --target install
+
+      - name: Symlink build dir
+        run: ln -sfn build_cmake/install_cmake build
+
+      - name: Install MSL stack
+        run: |
+          cat > /tmp/msl.mos <<'MOS'
+          updatePackageIndex();
+          installPackage(Modelica, "3.2.1", exactMatch=true);
+          installPackage(Modelica, "3.2.3", exactMatch=true);
+          installPackage(Modelica, "4.0.0", exactMatch=true);
+          installPackage(Modelica, "4.1.0", exactMatch=true);
+          MOS
+          build/bin/omc /tmp/msl.mos
+
+      - name: Populate testsuite libraries
+        run: cd libraries && make lib-for-testing
+
+      - name: Decompress reference files
+        run: cd testsuite/ReferenceFiles && make
+
+      - name: Run fast testsuite
+        working-directory: testsuite
+        run: make -j 4 fast || true
+
+      - name: Summary
+        working-directory: testsuite
+        run: |
+          grep -h "out of.*tests failed" *.log | \
+            awk '{f+=$2; t+=$5} END {printf "%d/%d failed (%.1f%% pass)\n", f, t, 100*(t-f)/t}'
