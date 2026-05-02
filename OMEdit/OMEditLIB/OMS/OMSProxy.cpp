@@ -818,7 +818,8 @@ bool OMSProxy::getTolerance(QString cref, double *absoluteTolerance, double *rel
   QStringList args;
   args << "\"" + cref + "\"";
   LOG_COMMAND(command, args);
-  oms_status_enu_t status = oms_getTolerance(cref.toUtf8().constData(), absoluteTolerance, relativeTolerance);
+  Q_UNUSED(absoluteTolerance);
+  oms_status_enu_t status = oms_getTolerance(cref.toUtf8().constData(), relativeTolerance);
   logResponse(command, status, &commandTime);
   return statusToBool(status);
 }
@@ -1349,7 +1350,8 @@ bool OMSProxy::setTolerance(QString cref, double absoluteTolerance, double relat
   QStringList args;
   args << "\"" + cref + "\"" << QString::number(absoluteTolerance) << QString::number(relativeTolerance);
   LOG_COMMAND(command, args);
-  oms_status_enu_t status = oms_setTolerance(cref.toUtf8().constData(), absoluteTolerance, relativeTolerance);
+  Q_UNUSED(absoluteTolerance);
+  oms_status_enu_t status = oms_setTolerance(cref.toUtf8().constData(), relativeTolerance);
   logResponse(command, status, &commandTime);
   return statusToBool(status);
 }
