@@ -1,0 +1,2 @@
+loadFile("D.mo"); getErrorString();
+r := simulate(D, stopTime = 1); r.messages; getErrorString();

@@ -1,0 +1,50 @@
+name: repro
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-repro]
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ubuntu-24.04
+            cc: clang
+            cxx: clang++
+          - image: fedora-44
+            cc: gcc
+            cxx: g++
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    container: docker.openmodelica.org/build-deps:${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: repro-branch
+      - uses: actions/checkout@v4
+        with:
+          repository: OpenModelica/OpenModelica
+          ref: master
+          submodules: recursive
+          fetch-depth: 1
+          path: om
+      - name: build
+        working-directory: om
+        run: |
+          git log -1 --format='%H %cd'
+          cmake -S . -B build_cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=build -DOM_ENABLE_GUI_CLIENTS=OFF -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          cmake --build build_cmake --parallel $(nproc) --target install
+          rm -rf build_cmake
+      - name: layout
+        working-directory: om
+        run: ls build build/lib*
+      - name: version
+        working-directory: om
+        run: ./build/bin/omc --version
+      - name: repro
+        if: always()
+        working-directory: repro-branch/.github/repro
+        run: |
+          export PATH=$GITHUB_WORKSPACE/om/build/bin:$PATH
+          for s in *.mos; do echo "\$ omc $s"; omc $s 2>&1 | grep -v '^ *$' || true; done

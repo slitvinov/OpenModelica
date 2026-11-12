@@ -1,0 +1,6 @@
+loadFile("J.mo"); getErrorString();
+linearize(J, stopTime = 0); getErrorString();
+readFile("linearized_model.mo");
+setCommandLineOptions("--generateSymbolicLinearization"); getErrorString();
+linearize(J, stopTime = 0); getErrorString();
+readFile("linearized_model.mo");

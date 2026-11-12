@@ -1,0 +1,4 @@
+loadFile("M.mo"); loadFile("M0.mo"); getErrorString();
+r := simulate(M, stopTime = 1); r.messages; getErrorString();
+r := simulate(M0, stopTime = 1); r.messages; getErrorString();
+val(z, 0.5);
