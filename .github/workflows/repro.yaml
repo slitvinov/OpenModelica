@@ -1,8 +1,25 @@
 name: repro
 on:
   workflow_dispatch:
+    inputs:
+      ref:
+        description: OpenModelica ref to build (branch, tag, SHA or refs/pull/N/head)
+        required: false
   push:
     branches: [ci-repro]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repro-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # What to build and which repro scripts to run; each ci-* branch sets its own.
+  OM_REF: master
+  REPRO: "*.mos"
+
 jobs:
   build:
     strategy:
@@ -19,32 +36,67 @@ jobs:
     timeout-minutes: 360
     container: docker.openmodelica.org/build-deps:${{ matrix.image }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          path: repro-branch
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: OpenModelica/OpenModelica
-          ref: master
+          ref: ${{ inputs.ref || env.OM_REF }}
           submodules: recursive
           fetch-depth: 1
           path: om
+      - name: ccache
+        run: |
+          command -v ccache || { command -v apt-get && apt-get update -qq && apt-get install -y -qq ccache; } || dnf install -y -q ccache
+          ccache --version | head -1
+          # github.workspace is the host path inside a container job; use the container's.
+          { echo "CCACHE_DIR=$GITHUB_WORKSPACE/.ccache"; echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE";
+            echo CCACHE_COMPILERCHECK=content; echo CCACHE_MAXSIZE=3G; } >> "$GITHUB_ENV"
+          export CCACHE_DIR=$GITHUB_WORKSPACE/.ccache
+          ccache --zero-stats
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ccache
+          key: ccache-${{ matrix.image }}-${{ matrix.cc }}-${{ github.run_id }}
+          restore-keys: ccache-${{ matrix.image }}-${{ matrix.cc }}-
       - name: build
         working-directory: om
         run: |
-          git log -1 --format='%H %cd'
-          cmake -S . -B build_cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=build -DOM_ENABLE_GUI_CLIENTS=OFF -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          git log -1 --format='%H %cd %s'
+          cmake -S . -B build_cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=build -DOM_ENABLE_GUI_CLIENTS=OFF \
+            -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           cmake --build build_cmake --parallel $(nproc) --target install
           rm -rf build_cmake
-      - name: layout
-        working-directory: om
-        run: ls build build/lib*
-      - name: version
-        working-directory: om
-        run: ./build/bin/omc --version
+          ccache --show-stats
+          ls build build/lib*
+          ./build/bin/omc --version
+      - name: pack
+        run: tar -C om -czf omc-${{ matrix.image }}.tar.gz build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: omc-${{ matrix.image }}
+          path: omc-${{ matrix.image }}.tar.gz
+          retention-days: 7
+
+  repro:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [ubuntu-24.04, fedora-44]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container: docker.openmodelica.org/build-deps:${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/repro
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: omc-${{ matrix.image }}
       - name: repro
-        if: always()
-        working-directory: repro-branch/.github/repro
         run: |
-          export PATH=$GITHUB_WORKSPACE/om/build/bin:$PATH
-          for s in *.mos; do echo "\$ omc $s"; omc $s 2>&1 | grep -v '^ *$' || true; done
+          tar -xzf omc-${{ matrix.image }}.tar.gz
+          export PATH=$PWD/build/bin:$PATH
+          omc --version
+          cd .github/repro
+          for s in $REPRO; do echo "\$ omc $s"; omc $s 2>&1 | grep -v '^ *$' || true; done
