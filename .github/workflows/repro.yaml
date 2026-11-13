@@ -100,3 +100,85 @@ jobs:
           omc --version
           cd .github/repro
           for s in $REPRO; do echo "\$ omc $s"; omc $s 2>&1 | grep -v '^ *$' || true; done
+
+  # macOS has no build-deps image upstream; Homebrew dependencies and the flags
+  # that build omc on macOS (no libquadmath on arm64: no Fortran, optimization, MOO).
+  build-macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      CCACHE_COMPILERCHECK: content
+      CCACHE_MAXSIZE: 3G
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: OpenModelica/OpenModelica
+          ref: ${{ inputs.ref || env.OM_REF }}
+          submodules: recursive
+          fetch-depth: 1
+          path: om
+      - name: dependencies
+        run: |
+          brew install autoconf automake boost ccache cmake make openjdk pkg-config
+          { echo "CCACHE_DIR=$GITHUB_WORKSPACE/.ccache"; echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE"; } >> "$GITHUB_ENV"
+          echo "$(brew --prefix openjdk)/bin" >> "$GITHUB_PATH"
+          sw_vers; uname -m; clang --version | head -1
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ccache
+          key: ccache-${{ matrix.runner }}-${{ github.run_id }}
+          restore-keys: ccache-${{ matrix.runner }}-
+      - name: build
+        working-directory: om
+        run: |
+          git log -1 --format='%H %cd %s'
+          ccache --zero-stats
+          cmake -S . -B build_cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=build \
+            -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DOM_OMC_ENABLE_FORTRAN=OFF -DOM_OMC_ENABLE_OPTIMIZATION=OFF -DOM_OMC_ENABLE_MOO=OFF \
+            -DOM_OMC_ENABLE_CPP_RUNTIME=OFF -DOM_OMC_ENABLE_OMNIORB=OFF -DOM_OMC_ENABLE_PRIMME=OFF \
+            -DOM_ENABLE_GUI_CLIENTS=OFF -DOM_ENABLE_ENCRYPTION=OFF \
+            -DCMAKE_PREFIX_PATH=$(brew --prefix)
+          cmake --build build_cmake --parallel $(sysctl -n hw.ncpu) --target install
+          rm -rf build_cmake
+          ccache --show-stats
+          ls build build/lib*
+          ./build/bin/omc --version
+      - name: pack
+        run: tar -C om -czf omc-${{ matrix.runner }}.tar.gz build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: omc-${{ matrix.runner }}
+          path: omc-${{ matrix.runner }}.tar.gz
+          retention-days: 7
+
+  repro-macos:
+    needs: build-macos
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/repro
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: omc-${{ matrix.runner }}
+      - name: repro
+        run: |
+          brew install boost 2>/dev/null | tail -1 || true
+          tar -xzf omc-${{ matrix.runner }}.tar.gz
+          export PATH=$PWD/build/bin:$PATH
+          omc --version
+          cd .github/repro
+          for s in $REPRO; do echo "\$ omc $s"; omc $s 2>&1 | grep -v '^ *$' || true; done
