@@ -1,3 +1,0 @@
-loadFile("a.mo"); getErrorString();
-simulate(A, stopTime = 1); getErrorString();
-val(x, 1.0);

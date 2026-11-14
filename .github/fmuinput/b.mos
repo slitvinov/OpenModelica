@@ -1,0 +1,4 @@
+loadFile("I.mo"); getErrorString();
+setCommandLineOptions("--fmiFlags=s:cvode"); getErrorString();
+buildModelFMU(I.WithInput, version = "2.0", fmuType = "cs", fileNamePrefix = "WithInput"); getErrorString();
+buildModelFMU(I.NoInput, version = "2.0", fmuType = "cs", fileNamePrefix = "NoInput"); getErrorString();
