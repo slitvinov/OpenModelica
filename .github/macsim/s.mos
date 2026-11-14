@@ -1,0 +1,3 @@
+loadFile("S.mo"); getErrorString();
+res := simulate(S); print(res.messages + "\n"); getErrorString();
+val(x, 1.0);
