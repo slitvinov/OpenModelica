@@ -1,0 +1,29 @@
+name: macsim
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-macsim]
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/macsim
+      - name: macsim
+        working-directory: .github/macsim
+        run: |
+          sw_vers; uname -m
+          curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-macos-universal.tar.gz
+          mkdir om && tar -xzf om.tgz -C om
+          ./om/bin/omc --version
+          ./om/bin/omc s.mos
