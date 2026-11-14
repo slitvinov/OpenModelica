@@ -41,6 +41,6 @@ main(int argc, char **argv)
 	for (i = 0; i < n; i++)
 		if (step(c, i * 1e-3, 1e-3, fmi2True) > fmi2Warning) { fprintf(stderr, "doStep failed\n"); return 1; }
 	clock_gettime(CLOCK_MONOTONIC, &b);
-	printf("%ld steps: %.2f us per fmi2DoStep\n", n, 1e6 * (b.tv_sec - a.tv_sec + 1e-9 * (b.tv_nsec - a.tv_nsec)) / n);
+	printf("%.2f us per fmi2DoStep\n", 1e6 * (b.tv_sec - a.tv_sec + 1e-9 * (b.tv_nsec - a.tv_nsec)) / n);
 	return 0;
 }
