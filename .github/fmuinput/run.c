@@ -46,7 +46,6 @@ main(int argc, char **argv)
 		return 1;
 	}
 	clock_gettime(CLOCK_MONOTONIC, &b);
-	printf("init %.3f s\n", b.tv_sec - a.tv_sec + 1e-9 * (b.tv_nsec - a.tv_nsec));
 	clock_gettime(CLOCK_MONOTONIC, &a);
 	for (; t < tstop - 1e-9; t += dt, n++)
 		if (fmi2DoStep(c, t, dt, fmi2True) > fmi2Warning) {
