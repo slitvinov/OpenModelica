@@ -1,0 +1,2 @@
+loadFile("E.mo"); getErrorString();
+instantiateModel(E); getErrorString();
