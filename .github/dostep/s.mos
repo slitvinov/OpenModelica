@@ -1,7 +1,7 @@
 loadFile("S.mo"); getErrorString();
-buildModelFMU(S.In1, version = "2.0", fmuType = "cs", fileNamePrefix = "In1"); getErrorString();
-buildModelFMU(S.No1, version = "2.0", fmuType = "cs", fileNamePrefix = "No1"); getErrorString();
-buildModelFMU(S.In10000, version = "2.0", fmuType = "cs", fileNamePrefix = "In10000"); getErrorString();
-buildModelFMU(S.No10000, version = "2.0", fmuType = "cs", fileNamePrefix = "No10000"); getErrorString();
-buildModelFMU(S.In50000, version = "2.0", fmuType = "cs", fileNamePrefix = "In50000"); getErrorString();
-buildModelFMU(S.No50000, version = "2.0", fmuType = "cs", fileNamePrefix = "No50000"); getErrorString();
+for m in {"M1", "M10000", "M50000"} loop
+  buildModelFMU(stringTypeName("S." + m), version = "2.0", fmuType = "cs", fileNamePrefix = m);
+  r := simulate(stringTypeName("S." + m), stopTime = 20, numberOfIntervals = 20000, method = "euler", variableFilter = "x");
+  print(m + " simulate: " + String(1e6 * r.timeSimulation / 20000) + " us per step\n");
+end for;
+getErrorString();
