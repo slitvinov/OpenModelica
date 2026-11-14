@@ -1,0 +1,4 @@
+loadFile("W.mo"); getErrorString();
+translateModel(W.R1); getErrorString();
+setCommandLineOptions("--newBackend"); getErrorString();
+translateModel(W.R1); getErrorString();
