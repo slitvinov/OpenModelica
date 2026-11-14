@@ -18,7 +18,7 @@ jobs:
       - name: fmuinput
         working-directory: .github/fmuinput
         run: |
-          sudo apt-get install -y -qq valgrind >/dev/null
+          sudo apt-get update -qq && sudo apt-get install -y -qq valgrind >/dev/null
           curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
           mkdir om && tar -xzf om.tgz -C om
           OMC=$(find "$PWD/om" -path '*/bin/omc' | head -1)
