@@ -18,6 +18,7 @@ jobs:
       - name: fmuinput
         working-directory: .github/fmuinput
         run: |
+          sudo apt-get install -y -qq valgrind >/dev/null
           curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
           mkdir om && tar -xzf om.tgz -C om
           OMC=$(find "$PWD/om" -path '*/bin/omc' | head -1)
@@ -30,3 +31,7 @@ jobs:
             printf '%s: ' $m
             (cd $m && ../run "$PWD/binaries/linux64/$m.so" "$guid" "file://$PWD/resources" 100 0.01)
           done
+          # instruction counts per function over 1000 fmi2DoStep calls
+          cd WithInput
+          valgrind --tool=callgrind --callgrind-out-file=cg.out ../run "$PWD/binaries/linux64/WithInput.so" "$(grep -o 'guid="[^"]*"' modelDescription.xml | head -1 | cut -d'"' -f2)" "file://$PWD/resources" 10 0.01 2>/dev/null
+          callgrind_annotate cg.out 2>/dev/null | head -20
