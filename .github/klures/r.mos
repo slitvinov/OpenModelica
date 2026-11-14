@@ -1,0 +1,5 @@
+loadFile("R.mo"); getErrorString();
+for s in {"1e10", "1e12"} loop
+  res := simulate(R, simflags="-lssMinSize=1 -lssMaxDensity=1 -lv=LOG_LS -override=s=" + s);
+  print("s = " + s + ": " + res.messages + "\n");
+end for;
