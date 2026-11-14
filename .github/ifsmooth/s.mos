@@ -1,0 +1,6 @@
+loadFile("S.mo"); getErrorString();
+r := simulate(S, stopTime = 10);
+print(r.messages + "\n" + getErrorString() + "\n");
+setCommandLineOptions("--generateDynamicJacobian=symbolic"); getErrorString();
+r := simulate(S, stopTime = 10);
+print(r.messages + "\n" + getErrorString() + "\n");
