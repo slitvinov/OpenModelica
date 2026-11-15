@@ -1,0 +1,44 @@
+model C
+  package Medium = Buildings.Media.Water;
+  Buildings.Fluid.FixedResistances.PressureDrop pipSouth1(redeclare package Medium = Medium, dp_nominal = 50000, m_flow_nominal = 4);
+  Buildings.Fluid.FixedResistances.PressureDrop pmpNorth(redeclare package Medium = Medium, m_flow_nominal = 24660 / 3600, dp_nominal = 1000);
+  Buildings.Fluid.FixedResistances.PressureDrop pipNorth2(redeclare package Medium = Medium, dp_nominal = 50000, m_flow_nominal = 5);
+  Buildings.Fluid.FixedResistances.PressureDrop pipNorth1(redeclare package Medium = Medium, dp_nominal = 50000, m_flow_nominal = 3);
+  Buildings.Fluid.FixedResistances.PressureDrop[2] valNorth1(redeclare each package Medium = Medium, each m_flow_nominal = 1, each dp_nominal = 1000);
+  Buildings.Fluid.Actuators.Valves.ThreeWayLinear valSouth(redeclare package Medium = Medium, m_flow_nominal = 5, dpValve_nominal = 10000);
+  Buildings.Fluid.FixedResistances.Junction valNorth(redeclare package Medium = Medium, m_flow_nominal = { 5, 5, 5 }, dp_nominal = { 1000, 1000, 1000 });
+  Buildings.Fluid.FixedResistances.Junction spl(m_flow_nominal = { 10, 10, 10 }, dp_nominal = { 1000, 10, 10 }, redeclare package Medium = Medium);
+  Modelica.Blocks.Sources.Pulse stepValve;
+  Buildings.Fluid.FixedResistances.PressureDrop valCoo(redeclare package Medium = Medium, m_flow_nominal = 10, dp_nominal = 1000);
+  Buildings.Fluid.FixedResistances.PressureDrop pumpCoo(redeclare package Medium = Medium, m_flow_nominal = 10, dp_nominal = 1000);
+  Buildings.Fluid.MixingVolumes.MixingVolume vol(nPorts = 2, redeclare package Medium = Medium, m_flow_nominal = 10, V = 1);
+  Buildings.HeatTransfer.Sources.FixedTemperature Tcold(T = 283.15);
+  Buildings.Fluid.FixedResistances.PressureDrop tabsNorth1[2](redeclare each package Medium = Medium, each dp_nominal = 50000, m_flow_nominal = valNorth1.m_flow_nominal);
+  Buildings.Fluid.Sources.Boundary_pT sink(redeclare package Medium = Medium, nPorts = 3);
+  Modelica.Thermal.HeatTransfer.Components.ThermalConductor cond(G = 100);
+equation
+  connect(pipNorth1.port_a, pmpNorth.port_b);
+  connect(pmpNorth.port_b, pipNorth2.port_a);
+  for i in 1 : 2 loop
+    connect(tabsNorth1[i].port_b, valNorth.port_3);
+    connect(pipNorth1.port_b, valNorth1[i].port_a);
+  end for;
+  connect(valNorth.port_2, pmpNorth.port_a);
+  connect(stepValve.y, valSouth.y);
+  connect(valCoo.port_b, valSouth.port_1);
+  connect(valCoo.port_b, valNorth.port_1);
+  connect(vol.ports[1], pumpCoo.port_b);
+  connect(Tcold.port, cond.port_a);
+  connect(cond.port_b, vol.heatPort);
+  connect(valNorth1.port_b, tabsNorth1.port_a);
+  connect(valCoo.port_a, vol.ports[2]);
+  connect(spl.port_1, sink.ports[1]);
+  connect(spl.port_3, valSouth.port_3);
+  connect(spl.port_3, pumpCoo.port_a);
+  connect(spl.port_3, valNorth.port_3);
+  connect(spl.port_3, valCoo.port_a);
+  connect(pipNorth2.port_b, sink.ports[2]);
+  connect(valSouth.port_2, pipSouth1.port_a);
+  connect(spl.port_2, valSouth.port_1);
+  connect(pipSouth1.port_b, sink.ports[3]);
+end C;
