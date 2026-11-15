@@ -1,0 +1,4 @@
+installPackage(Buildings, "13.0.1", exactMatch = true); getErrorString();
+loadModel(Buildings, {"13.0.1"}); loadFile("M.mo"); loadFile("C.mo"); getErrorString();
+r := simulate(M, stopTime = 1); print(r.messages + "\n");
+r := simulate(C, stopTime = 1); print(r.messages + "\n");
