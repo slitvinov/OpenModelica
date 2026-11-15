@@ -1,0 +1,4 @@
+setCommandLineOptions("--baseModelica"); loadFile("P.mo"); getErrorString();
+s := instantiateModel(P.M); getErrorString();
+writeFile("flat.mo", s);
+clear(); loadFile("flat.mo"); getErrorString();
