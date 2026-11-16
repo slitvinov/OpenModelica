@@ -1,0 +1,2 @@
+loadFile("RE1.mo"); getErrorString();
+r := simulate(RE1, stopTime = 1); print(r.messages + "\n" + getErrorString() + "\n");
