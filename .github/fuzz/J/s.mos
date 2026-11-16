@@ -1,0 +1,3 @@
+loadFile("NG5.mo"); getErrorString();
+r := simulate(NG5, stopTime = 1); print(r.messages + "\n" + getErrorString() + "\n");
+val(x, 0.5); val(y, 0.5);
