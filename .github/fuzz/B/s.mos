@@ -1,0 +1,3 @@
+loadFile("RB.mo"); getErrorString();
+r := simulate(RB, stopTime = 1); print(r.messages + "\n" + getErrorString() + "\n");
+val(x1, 0.5); val(u1, 0.5);
