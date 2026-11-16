@@ -1,0 +1,2 @@
+loadFile("NK1.mo"); getErrorString();
+r := simulate(NK1, stopTime = 1); print(r.messages + "\n" + getErrorString() + "\n");
