@@ -1,0 +1,5 @@
+loadFile("RW4.mo"); loadFile("RW6.mo"); getErrorString();
+for m in {"RW4", "RW6"} loop
+  r := simulate(stringTypeName(m), stopTime = 1);
+  print(m + ": x1(1) = " + String(val(x1, 1)) + ", x2(1) = " + String(val(x2, 1)) + "\n");
+end for;
