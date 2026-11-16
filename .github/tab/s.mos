@@ -1,3 +1,4 @@
+installPackage(Modelica, "4.1.0", exactMatch = true); getErrorString();
 loadModel(Modelica, {"4.1.0"}); loadFile("T.mo"); getErrorString();
 for m in {"A", "B", "C"} loop
   r := simulate(stringTypeName("T." + m), stopTime = 2);
