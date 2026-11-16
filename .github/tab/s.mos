@@ -1,0 +1,5 @@
+loadModel(Modelica, {"4.1.0"}); loadFile("T.mo"); getErrorString();
+for m in {"A", "B", "C"} loop
+  r := simulate(stringTypeName("T." + m), stopTime = 2);
+  print(m + ": " + String(val(tab.y[1], 0.5)) + " " + String(val(tab.y[1], 1.0)) + " " + String(val(tab.y[1], 1.5)) + "\n");
+end for;
