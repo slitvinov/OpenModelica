@@ -21,6 +21,5 @@ jobs:
           curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
           mkdir om && tar -xzf om.tgz -C om
           ./om/bin/omc --version
-          ./om/bin/omc -e 'installPackage(Modelica, "4.1.0")'
           cat T.mo s.mos
           ./om/bin/omc s.mos 2>&1 | grep -v '^clang '
