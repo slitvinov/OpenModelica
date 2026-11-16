@@ -1,0 +1,2 @@
+loadFile("SQ6.mo"); getErrorString();
+r := simulate(SQ6, stopTime = 1); print(r.messages + "\n" + getErrorString() + "\n");
