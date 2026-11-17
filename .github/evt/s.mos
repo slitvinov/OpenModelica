@@ -1,0 +1,5 @@
+loadFile("E.mo"); getErrorString();
+r := simulate(E, method = "dassl", simflags = "-lv=LOG_EVENTS"); print(r.messages + "\n");
+print("dassl: n(1) = " + String(val(n, 1.0)) + "\n");
+r := simulate(E, method = "gbode", simflags = "-lv=LOG_EVENTS"); print(r.messages + "\n");
+print("gbode: n(1) = " + String(val(n, 1.0)) + " x(0.5) - 0.5 = " + String(val(x, 0.5) - 0.5) + "\n");
