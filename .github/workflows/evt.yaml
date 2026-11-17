@@ -1,0 +1,26 @@
+name: evt
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-evt]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/evt
+      - name: evt
+        working-directory: .github/evt
+        run: |
+          curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
+          mkdir om && tar -xzf om.tgz -C om
+          ./om/bin/omc --version
+          set +e
+          cat s.mos E.mo  
+          ./om/bin/omc s.mos
