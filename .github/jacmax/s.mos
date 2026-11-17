@@ -1,0 +1,5 @@
+loadFile("J.mo"); loadFile("K.mo"); getErrorString();
+r := simulate(J); print(r.messages + "\n" + getErrorString());
+setCommandLineOptions("--generateDynamicJacobian=symbolic"); getErrorString();
+r := simulate(K); print(r.messages + "\n" + getErrorString());
+r := simulate(J); print(r.messages + "\n" + getErrorString());
