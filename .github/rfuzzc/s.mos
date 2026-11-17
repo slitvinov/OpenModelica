@@ -1,0 +1,4 @@
+echo(false);
+loadFile("S.mo");
+r := simulate(S, stopTime = 3);
+print(r.messages + getErrorString());
