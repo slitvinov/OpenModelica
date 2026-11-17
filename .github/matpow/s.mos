@@ -1,0 +1,4 @@
+loadFile("M.mo"); loadFile("N.mo"); getErrorString();
+r := simulate(N); print(r.messages + "\n" + getErrorString());
+print("N: q[1,2](1) = " + String(val(q[1, 2], 1)) + "\n");
+r := simulate(M); print(r.messages + "\n" + getErrorString() + "\n");
