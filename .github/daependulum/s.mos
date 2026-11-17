@@ -1,0 +1,7 @@
+echo(false);
+loadFile("S.mo");
+r := simulate(S, stopTime = 1);
+print(r.messages + "\n");
+setCommandLineOptions("--daeMode");
+r := simulate(S, stopTime = 1);
+print(r.messages + "\n" + getErrorString());
