@@ -1,0 +1,9 @@
+echo(false);
+loadFile("S.mo");
+print(instantiateModel(S));
+setCommandLineOptions("--baseModelica");
+s := instantiateModel(S);
+print(s + getErrorString());
+writeFile("b.mo", s);
+clear();
+print(String(loadFile("b.mo")) + "\n" + getErrorString());
