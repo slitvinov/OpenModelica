@@ -1,0 +1,6 @@
+loadFile("A.mo"); loadFile("B.mo"); getErrorString();
+r := simulate(A); print(r.messages + "\n" + getErrorString() + "\n");
+r := simulate(B); print(r.messages + "\n" + getErrorString() + "\n");
+setCommandLineOptions("--newBackend"); getErrorString();
+r := simulate(A); print(r.messages + "\n" + getErrorString() + "\n");
+r := simulate(B); print(r.messages + "\n" + getErrorString() + "\n");
