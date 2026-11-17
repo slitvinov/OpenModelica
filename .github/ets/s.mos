@@ -1,0 +1,4 @@
+installPackage(Buildings, "13.0.1", exactMatch = true); getErrorString();
+loadModel(Buildings, {"13.0.1"}); getErrorString();
+r := simulate(Buildings.DHC.ETS.Heating.Examples.Indirect, startTime = 3600, stopTime = 4200); print(r.messages + "\n");
+r := simulate(Buildings.DHC.ETS.Heating.Examples.Indirect, startTime = 4000, stopTime = 4600); print(r.messages + "\n");
