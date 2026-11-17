@@ -1,0 +1,12 @@
+echo(false);
+loadFile("S.mo");
+r := simulate(S, stopTime = 1);
+print(r.messages + getErrorString());
+print("T1[1] = " + String(val(T1[1], 0)) + ", der(T1[1]) = " + String(val(der(T1[1]), 0)) + "\n");
+print("T1[2] = " + String(val(T1[2], 0)) + ", der(T1[2]) = " + String(val(der(T1[2]), 0)) + "\n");
+print("T1[3] = " + String(val(T1[3], 0)) + ", der(T1[3]) = " + String(val(der(T1[3]), 0)) + "\n");
+print("T1[4] = " + String(val(T1[4], 0)) + ", der(T1[4]) = " + String(val(der(T1[4]), 0)) + "\n");
+print("T1[5] = " + String(val(T1[5], 0)) + ", der(T1[5]) = " + String(val(der(T1[5]), 0)) + "\n");
+print("T1[6] = " + String(val(T1[6], 0)) + ", der(T1[6]) = " + String(val(der(T1[6]), 0)) + "\n");
+print("T1[7] = " + String(val(T1[7], 0)) + ", der(T1[7]) = " + String(val(der(T1[7]), 0)) + "\n");
+print("T1[8] = " + String(val(T1[8], 0)) + ", der(T1[8]) = " + String(val(der(T1[8]), 0)) + "\n");
