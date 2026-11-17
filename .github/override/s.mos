@@ -1,0 +1,4 @@
+loadFile("T.mo"); getErrorString();
+r := simulate(T, simflags = "-override=k=2,stopTime=2,tolerance=1e-10"); print(r.messages + "\n");
+print("t_end = " + String(val(time, 2.0)) + " x(1) = " + String(val(x, 1.0)) + "\n");
+print(getErrorString());
