@@ -1,6 +1,6 @@
 installPackage(ModelicaTest, "4.1.0+maint.om", exactMatch=true); loadModel(ModelicaTest); getErrorString();
-loadFile("W.mo"); getErrorString();
-r := simulate(ModelicaTest.MultiBody.Joints.RevolutePlanarLoopConstraint, stopTime = 0.01); print(r.messages + getErrorString() + "\n");
-print("RevolutePlanarLoopConstraint (revolute2.w start = 2*pi, fixed = true): w(0) = " + String(val(revolute2.w, 0)) + "\n");
-r := simulate(W, stopTime = 0.01); print(r.messages + getErrorString() + "\n");
-print("W (revolute2.w start = 3): w(0) = " + String(val(revolute2.w, 0)) + "\n");
+r := simulate(ModelicaTest.MultiBody.Joints.RevolutePlanarLoopConstraint, stopTime = 0.01); print(getErrorString());
+print("revolute2.w(0) = " + String(val(revolute2.w, 0)) + ", revolute2.phi(0) = " + String(val(revolute2.phi, 0)) + ", revolute3.phi(0) = " + String(val(revolute3.phi, 0)) + "\n");
+setCommandLineOptions("--newBackend"); getErrorString();
+r := simulate(ModelicaTest.MultiBody.Joints.RevolutePlanarLoopConstraint, stopTime = 0.01, fileNamePrefix = "NB"); print(r.messages + getErrorString());
+print("newBackend: revolute2.w(0) = " + String(val(revolute2.w, 0, "NB_res.mat")) + "\n");
