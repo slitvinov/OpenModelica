@@ -23,3 +23,5 @@ jobs:
           ./om/bin/omc --version
           cat *.mo s.mos
           ./om/bin/omc s.mos 2>&1 | grep -v '^clang '
+          echo '=== DIAG'
+          ./om/bin/omc c.mos 2>&1 | grep -v '^clang ' | grep -i -E 'fixed|over|under|consistent|revolute2.w|initial' | head -60
