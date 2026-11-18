@@ -1,0 +1,16 @@
+loadFile("SQ6.mo"); getErrorString();
+for m in {"SQ6", "SQ6smooth", "SQ6noEvent", "SQ6disc", "SQ6then"} loop
+  print("=== " + m + "\n");
+  r := simulate(stringTypeName("P." + m), stopTime = 1, outputFormat = "csv");
+  print(r.messages + "\n" + getErrorString() + "\n");
+  if regularFileExists("P." + m + "_res.csv") then
+    print(val(x1, 0.0, "P." + m + "_res.csv") + " " + val(x1, 1.0, "P." + m + "_res.csv") + "  (x1 at t=0, t=1)\n");
+  end if;
+end for;
+print("=== new backend\n");
+setCommandLineOptions("--newBackend"); getErrorString();
+for m in {"SQ6", "SQ6smooth"} loop
+  print("=== NB " + m + "\n");
+  r := simulate(stringTypeName("P." + m), stopTime = 1, fileNamePrefix = "NB_" + m);
+  print(r.messages + "\n" + getErrorString() + "\n");
+end for;
