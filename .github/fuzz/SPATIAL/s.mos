@@ -1,0 +1,11 @@
+echo(false);
+loadFile("S.mo");
+r := simulate(S, stopTime = 1, numberOfIntervals = 10, tolerance = 1e-10); print(getErrorString());
+for i in 1:5 loop
+  print("t = " + String(i/10) + "  z = " + String(val(z, i/10)) + "  out0 = " + String(val(out0, i/10)) + "\n");
+end for;
+setCommandLineOptions("--newBackend");
+r := simulate(S, stopTime = 1, numberOfIntervals = 10, tolerance = 1e-10, fileNamePrefix = "NB"); print(getErrorString());
+for i in 1:5 loop
+  print("newBackend t = " + String(i/10) + "  z = " + String(val(z, i/10, "NB_res.mat")) + "  out0 = " + String(val(out0, i/10, "NB_res.mat")) + "\n");
+end for;
