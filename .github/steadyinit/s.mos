@@ -3,5 +3,5 @@ loadFile("S.mo");
 r := simulate(S, stopTime = 1);
 print(r.messages + getErrorString());
 for i in 1:8 loop
-  print("T1[" + String(i) + "] = " + String(val(stringVariableName("T1[" + String(i) + "]"), 0)) + ", der = " + String(val(stringVariableName("der(T1[" + String(i) + "])"), 0)) + "\n");
+  print(String(val(stringVariableName("T1[" + String(i) + "]"), 0)) + " ");
 end for;
