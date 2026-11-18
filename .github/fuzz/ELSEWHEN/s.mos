@@ -1,0 +1,7 @@
+loadFile("A.mo"); loadFile("B.mo"); getErrorString();
+r := simulate(A, stopTime = 1); print(r.messages + "\n" + getErrorString());
+r := simulate(B, stopTime = 1); print(r.messages + getErrorString());
+print("B: n(1) = " + String(val(n, 1, "B_res.mat")) + ", t0(1) = " + String(val(t0, 1, "B_res.mat")) + "\n");
+setCommandLineOptions("--newBackend"); getErrorString();
+r := simulate(A, stopTime = 1, fileNamePrefix = "NB"); print(r.messages + getErrorString());
+print("A, newBackend: n(1) = " + String(val(n, 1, "NB_res.mat")) + ", t0(1) = " + String(val(t0, 1, "NB_res.mat")) + "\n");
