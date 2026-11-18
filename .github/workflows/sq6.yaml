@@ -1,0 +1,27 @@
+name: sq6
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-sq6]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/fuzz/SQ6
+      - name: repro
+        working-directory: .github/fuzz/SQ6
+        run: |
+          curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
+          mkdir om && tar -xzf om.tgz -C om
+          ./om/bin/omc --version
+          cat *.mo s.mos
+          ./om/bin/omc s.mos 2>&1 | grep -v '^clang '
+          grep -h -A3 'SQ6' *_info.json 2>/dev/null | head -0 || true
+          for m in SQ6 SQ6smooth SQ6noEvent SQ6disc; do echo "--- generated code, sqrt in P.$m"; grep -h 'sqrt' P.${m}_*.c | head -5 || true; done
