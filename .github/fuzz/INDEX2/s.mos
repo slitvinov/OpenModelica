@@ -1,6 +1,7 @@
-loadFile("D.mo"); getErrorString();
-r := simulate(D, stopTime = 1); print(getErrorString());
+echo(false);
+loadFile("D.mo"); print(getErrorString());
+simulate(D, stopTime = 1); print(getErrorString());
 for t in {0.25, 0.5} loop print("t=" + String(t) + " x=" + String(val(x, t)) + " u=" + String(val(u, t)) + " exact u=1\n"); end for;
-setCommandLineOptions("--newBackend"); getErrorString();
-r := simulate(D, stopTime = 1, fileNamePrefix = "NB"); print(getErrorString());
+setCommandLineOptions("--newBackend");
+simulate(D, stopTime = 1, fileNamePrefix = "NB"); print(getErrorString());
 for t in {0.25, 0.5} loop print("newBackend t=" + String(t) + " x=" + String(val(x, t, "NB_res.mat")) + " u=" + String(val(u, t, "NB_res.mat")) + " exact u=1\n"); end for;
