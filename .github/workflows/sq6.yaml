@@ -23,5 +23,4 @@ jobs:
           ./om/bin/omc --version
           cat *.mo s.mos
           ./om/bin/omc s.mos 2>&1 | grep -v '^clang '
-          grep -h -A3 'SQ6' *_info.json 2>/dev/null | head -0 || true
-          for m in SQ6 SQ6smooth SQ6noEvent SQ6disc; do echo "--- generated code, sqrt in P.$m"; grep -h 'sqrt' P.${m}_*.c | head -5 || true; done
+          for m in SQ6 SQ6smooth SQ6noEvent SQ6disc; do echo "--- sqrt in generated C of P.$m"; grep -h 'sqrt' P.$m.c P.${m}_*.c 2>/dev/null | grep -v '^ *//' | head -4 || true; done
