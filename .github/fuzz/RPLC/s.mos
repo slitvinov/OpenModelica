@@ -1,0 +1,6 @@
+print(String(loadModel(ModelicaTest)) + getErrorString() + "\n");
+loadFile("W.mo"); getErrorString();
+r := simulate(ModelicaTest.MultiBody.Joints.RevolutePlanarLoopConstraint, stopTime = 0.01); print(r.messages + getErrorString() + "\n");
+print("original: start " + String(val(revolute2.w.start, 0)) + ", fixed " + String(getParameterValue(ModelicaTest.MultiBody.Joints.RevolutePlanarLoopConstraint, "revolute2.w")) + ", w(0) = " + String(val(revolute2.w, 0)) + "\n");
+r := simulate(W, stopTime = 0.01); print(r.messages + getErrorString() + "\n");
+print("W (start = 3): w(0) = " + String(val(revolute2.w, 0)) + "\n");
