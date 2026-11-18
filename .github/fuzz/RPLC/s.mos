@@ -3,4 +3,3 @@ r := simulate(ModelicaTest.MultiBody.Joints.RevolutePlanarLoopConstraint, stopTi
 print("revolute2.w(0) = " + String(val(revolute2.w, 0)) + ", revolute2.phi(0) = " + String(val(revolute2.phi, 0)) + ", revolute3.phi(0) = " + String(val(revolute3.phi, 0)) + "\n");
 setCommandLineOptions("--newBackend"); getErrorString();
 r := simulate(ModelicaTest.MultiBody.Joints.RevolutePlanarLoopConstraint, stopTime = 0.01, fileNamePrefix = "NB"); print(r.messages + getErrorString());
-print("newBackend: revolute2.w(0) = " + String(val(revolute2.w, 0, "NB_res.mat")) + "\n");
