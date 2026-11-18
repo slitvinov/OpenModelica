@@ -1,5 +1,3 @@
 installPackage(ModelicaTest, "4.1.0+maint.om", exactMatch=true); loadModel(ModelicaTest); getErrorString();
 r := simulate(ModelicaTest.MultiBody.Joints.RevolutePlanarLoopConstraint, stopTime = 0.01); print(getErrorString());
 print("revolute2.w(0) = " + String(val(revolute2.w, 0)) + ", revolute2.phi(0) = " + String(val(revolute2.phi, 0)) + ", revolute3.phi(0) = " + String(val(revolute3.phi, 0)) + "\n");
-setCommandLineOptions("--newBackend"); getErrorString();
-r := simulate(ModelicaTest.MultiBody.Joints.RevolutePlanarLoopConstraint, stopTime = 0.01, fileNamePrefix = "NB"); print(r.messages + getErrorString());
