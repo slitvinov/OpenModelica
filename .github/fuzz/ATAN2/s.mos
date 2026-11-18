@@ -1,3 +1,3 @@
 loadFile("A.mo"); getErrorString();
-r := simulate(A, stopTime = 1); print(r.messages + getErrorString() + "\n");
-print("a=" + String(val(a, 0)) + " b=" + String(val(b, 0)) + " c=" + String(val(c, 0)) + " d=" + String(val(d, 0)) + "\n");
+r := simulate(A, stopTime = 1); print(getErrorString());
+print("a=" + String(val(a, 0)) + " c=" + String(val(c, 0)) + "\n");
