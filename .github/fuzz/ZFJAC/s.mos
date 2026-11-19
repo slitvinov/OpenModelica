@@ -1,0 +1,5 @@
+echo(false);
+installPackage(Buildings, "13.0.1", exactMatch = true); loadModel(Buildings, {"13.0.1"}); loadFile("Z.mo"); loadFile("F.mo"); getErrorString();
+setCommandLineOptions("--generateDynamicJacobian=symbolic");
+r := simulate(Z, stopTime = 1e-4, numberOfIntervals = 1, simflags = "-lv=LOG_JAC"); print(r.messages + getErrorString());
+r := simulate(F, stopTime = 1e-8, numberOfIntervals = 1, simflags = "-lv=LOG_JAC"); print(r.messages + getErrorString());
