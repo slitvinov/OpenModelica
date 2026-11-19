@@ -1,5 +1,11 @@
 echo(false);
 installPackage(Buildings, "13.0.1", exactMatch = true); loadModel(Buildings, {"13.0.1"}); loadFile("Z.mo"); loadFile("F.mo"); getErrorString();
 setCommandLineOptions("--generateDynamicJacobian=symbolic");
-r := simulate(Z, stopTime = 1e-4, numberOfIntervals = 1, simflags = "-lv=LOG_JAC"); print(r.messages + getErrorString());
-r := simulate(F, stopTime = 1e-8, numberOfIntervals = 1, simflags = "-lv=LOG_JAC"); print(r.messages + getErrorString());
+buildModel(Z, stopTime = 1e-4); buildModel(F, stopTime = 1e-8); getErrorString();
+system("./Z -lv=LOG_JAC 2>&1 | grep -m1 -A2 verification");
+system("./F -lv=LOG_JAC 2>&1 | grep -m1 -B10 -A2 verification");
+for h in {1e-2, 1e-4, 1e-6} loop
+  a := -(Buildings.Fluid.BaseClasses.FlowModels.basicFlowFunction_dp(h, 1, 1) - Buildings.Fluid.BaseClasses.FlowModels.basicFlowFunction_dp(-h, 1, 1))/(2*h);
+  b := -2*h/(Buildings.Fluid.BaseClasses.FlowModels.basicFlowFunction_m_flow(h, 1, 1) - Buildings.Fluid.BaseClasses.FlowModels.basicFlowFunction_m_flow(-h, 1, 1));
+  print("h = " + String(h) + ": d(-basicFlowFunction_dp)/dm = " + String(a) + ", -1/(d basicFlowFunction_m_flow/dw) = " + String(b) + ", difference " + String(a - b) + "\n");
+end for;
