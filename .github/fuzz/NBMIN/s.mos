@@ -1,0 +1,9 @@
+echo(false);
+loadFile("M.mo");
+r := simulate(M, stopTime = 2, fileNamePrefix = "old"); print(r.messages);
+setCommandLineOptions("--newBackend");
+r := simulate(M, stopTime = 2, fileNamePrefix = "new"); print(r.messages + getErrorString());
+for p in {"old", "new"} loop
+  f := p + "_res.mat";
+  print(p + ": x = " + String(val(x, 0, f)) + ", y = " + String(val(y, 0, f)) + ", z(2) = " + String(val(z, 2, f)) + "\n");
+end for;
