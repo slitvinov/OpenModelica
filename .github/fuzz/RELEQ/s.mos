@@ -1,0 +1,6 @@
+loadFile("R.mo"); getErrorString();
+r := simulate(R); print(r.messages + getErrorString());
+print("x(1) = " + String(val(x, 1, "R_res.mat")) + "\n");
+setCommandLineOptions("--newBackend"); getErrorString();
+r := simulate(R, fileNamePrefix = "NB"); print(r.messages + getErrorString());
+print("newBackend x(1) = " + String(val(x, 1, "NB_res.mat")) + "\n");
