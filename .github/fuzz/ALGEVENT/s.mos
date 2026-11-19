@@ -1,0 +1,8 @@
+echo(false);
+loadFile("M.mo");
+r := simulate(M, stopTime = 1, fileNamePrefix = "oldM"); r := simulate(C, stopTime = 1, fileNamePrefix = "oldC");
+setCommandLineOptions("--newBackend");
+r := simulate(M, stopTime = 1, fileNamePrefix = "newM"); r := simulate(C, stopTime = 1, fileNamePrefix = "newC"); print(getErrorString());
+for p in {"oldM", "newM", "oldC", "newC"} loop
+  print(p + ": i(0.4) = " + String(val(i, 0.4, p + "_res.mat")) + ", i(0.6) = " + String(val(i, 0.6, p + "_res.mat")) + ", i(0.9) = " + String(val(i, 0.9, p + "_res.mat")) + "\n");
+end for;
