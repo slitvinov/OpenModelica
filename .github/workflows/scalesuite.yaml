@@ -1,0 +1,31 @@
+name: scalesuite
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-scalesuite]
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [LinR, RoomRad, MslBridge, TornU, HeatNet, MslDiode]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/scalesuite
+      - name: run
+        working-directory: .github/scalesuite
+        run: |
+          curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
+          mkdir om && tar -xzf om.tgz -C om
+          ./om/bin/omc --version
+          echo 'installPackage(Modelica, "4.1.0"); getErrorString();' > inst.mos && ./om/bin/omc inst.mos
+          MODELS=${{ matrix.model }} OUT=res-${{ matrix.model }}.tsv ./om/bin/omc run.mos 2>&1 | grep -v '^clang '
+          python3 maps.py res-${{ matrix.model }}.tsv
+          cat res-${{ matrix.model }}.tsv

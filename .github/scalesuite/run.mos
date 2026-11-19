@@ -1,0 +1,76 @@
+// Metamorphic scaling suite for #14288 (LS/NLS scaling).
+// Each model has a manufactured exact solution and a variable err = max relative error vs it.
+// The unknowns are z = 10^k * y, so the exact z is known for every k.
+//   mode U: all unknowns and all equations scaled by 10^k (a change of units)
+//   mode M: unknowns of group A scaled by 10^k, group B and equations unchanged (mixed magnitudes)
+//   mode E: equations (residuals) scaled by 10^k, unknowns unchanged
+//   mode P: (MSL models) resistances*10^k, Ids/10^k: currents scale 10^-k, voltages unchanged
+// nominal: none (nf=0), right (nominal = typical*scale), hi (x1e3), lo (x1e-3); set at run time via -override=nf=.
+// Each model is built once; the executable is run for every (mode, k, nominal, solver).
+// Environment: MODELS (comma list, default all), KMIN/KMAX (default -12/14), OUT (default results.tsv).
+// Usage: omc run.mos     (needs the MSL, loaded with loadModel(Modelica))
+echo(false);
+models := getEnvironmentVar("MODELS");
+if models == "" then models := "LinR,RoomRad,MslBridge,TornU,HeatNet,MslDiode"; end if;
+kmin := -12; kmax := 14;
+for i in -30:30 loop
+  if String(i) == getEnvironmentVar("KMIN") then kmin := i; end if;
+  if String(i) == getEnvironmentVar("KMAX") then kmax := i; end if;
+end for;
+out := getEnvironmentVar("OUT");
+if out == "" then out := "results.tsv"; end if;
+writeFile(out, "model\tmode\tk\tnominal\tsolver\trc\twarn\terr\tclass\n");
+loadModel(Modelica); getErrorString();
+ls_names := {"default", "lapack", "totalpivot", "klu", "lis"};
+ls_flags := {"", "-ls=lapack -lssMaxDensity=0", "-ls=totalpivot -lssMaxDensity=0",
+             "-lss=klu -lssMinSize=1 -lssMaxDensity=1", "-lss=lis -lssMinSize=1 -lssMaxDensity=1"};
+nls_names := {"default", "hybrid", "kinsol", "experimental-kinsol", "newton", "mixed"};
+nls_flags := {"", "-nls=hybrid", "-nls=kinsol", "-nls=experimental-kinsol", "-nls=newton", "-nls=mixed"};
+nom_names := {"none", "right", "hi", "lo"};
+nom_vals := {"0", "1", "1e3", "1e-3"};
+ext := if getEnvironmentVar("OS") == "Windows_NT" then ".exe" else "";
+pre := if getEnvironmentVar("OS") == "Windows_NT" then "" else "./";
+for m in strtok(models, ",") loop
+  loadFile("models/" + m + ".mo"); getErrorString();
+  b := buildModel(stringTypeName(m), stopTime = 1, numberOfIntervals = 20, tolerance = 1e-6);
+  print(m + ": build " + getErrorString() + "\n");
+  isMsl := m == "MslBridge" or m == "MslDiode";
+  isLin := m == "LinR" or m == "RoomRad" or m == "MslBridge";
+  modes := if isMsl then {"P"} else {"U", "M", "E"};
+  for mode in modes loop
+    for k in kmin:kmax loop
+      sc := "1e" + String(k);
+      ov := if mode == "P" then "s=" + sc
+            elseif mode == "U" then "s=" + sc + ",sb=" + sc + ",se=" + sc
+            elseif mode == "M" then "s=" + sc + ",sb=1,se=1"
+            else "s=1,sb=1,se=" + sc;
+      for j in 1:4 loop
+        for i in 1:(if isLin then size(ls_names, 1) else size(nls_names, 1)) loop
+          sname := if isLin then ls_names[i] else nls_names[i];
+          sflag := if isLin then ls_flags[i] else nls_flags[i];
+          deleteFile("r.mat");
+          rc := system(pre + m + ext + " -override=" + ov + ",nf=" + nom_vals[j] + " " + sflag + " -r=r.mat", "run.log");
+          log := readFile("run.log");
+          (nw, ws) := regex(log, "Failed to solve|fails at time|failed at time|nan", 1);
+          e := -1.0;
+          if rc == 0 and regularFileExists("r.mat") then
+            d := readSimulationResult("r.mat", {err}); getErrorString();
+            e := max(d);
+            es := String(e);
+          else
+            es := "-";
+          end if;
+          (nn, ns) := regex(es, "nan|inf", 1);
+          cls := if rc <> 0 then "FAIL"
+                 elseif es == "-" or nn > 0 then "WRONG"
+                 elseif e <= 1e-4 then "OK"
+                 elseif e <= 1e-2 then "INACC"
+                 else "WRONG";
+          writeFile(out, m + "\t" + mode + "\t" + String(k) + "\t" + nom_names[j] + "\t" + sname + "\t" + String(rc)
+            + "\t" + (if nw > 0 then "W" else "-") + "\t" + es + "\t" + cls + "\n", append = true);
+        end for;
+      end for;
+    end for;
+  end for;
+  print(m + ": done\n");
+end for;
