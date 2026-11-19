@@ -1,0 +1,11 @@
+echo(false);
+loadFile("D.mo");
+r := simulate(D1, stopTime = 0.01, fileNamePrefix = "D1_old"); print(r.messages);
+r := simulate(D2, stopTime = 0.01, fileNamePrefix = "D2_old"); print(r.messages);
+setCommandLineOptions("--newBackend");
+r := simulate(D1, stopTime = 0.01, fileNamePrefix = "D1_new"); print(r.messages);
+r := simulate(D2, stopTime = 0.01, fileNamePrefix = "D2_new"); print(r.messages + getErrorString());
+for p in {"D1_old", "D2_old", "D1_new", "D2_new"} loop
+  f := p + "_res.mat";
+  print(p + ": x = " + String(val(x, 0, f)) + ", d = " + String(val(d, 0, f)) + "\n");
+end for;
