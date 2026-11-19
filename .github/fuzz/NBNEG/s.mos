@@ -1,0 +1,12 @@
+echo(false);
+loadFile("N.mo");
+r := simulate(N, stopTime = 1, fileNamePrefix = "old"); print(r.messages);
+setCommandLineOptions("--newBackend");
+r := simulate(N, stopTime = 1, fileNamePrefix = "new"); print(r.messages + getErrorString());
+for p in {"old", "new"} loop
+  f := p + "_res.mat"; t1 := val(t1, 0, f); t2 := val(t2, 0, f); t3 := val(t3, 0, f); ta := val(ta, 0, f);
+  dt := t3 - t1; qc := 4.243*(if dt > 0 then 1.3*dt^1.3333 else -1.3*(-dt)^1.3333); qr := 0.4562*5.6703744191844314e-8*(ta^4 - t1^4);
+  print(p + ": t1 = " + String(t1) + ", t2 = " + String(t2) + ", t3 = " + String(t3) + ", ta = " + String(ta) + ", residuals "
+    + String((t1 - t2)/6.903 - qc - qr + 2.408*(t1 - 298.9)) + " " + String(-126.1 - (t1 - t2)/6.903 + (t2 - 298.9)/3.626) + " "
+    + String(-49.26*(ta - t3) + qc) + " " + String(-50 + 49.26*(ta - t3) + qr) + "\n");
+end for;
