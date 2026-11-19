@@ -66,13 +66,13 @@ def analyse(d, v, ex, st):
                 smax = max([abs(env[n]) for n in innerm] + [abs(z) for z in r0])
                 smax = smax if math.isfinite(smax) else float("inf")
             except (OverflowError, ZeroDivisionError, ValueError): smax = float("inf")
-            out.append(dict(sys=e["eqIndex"], section=e.get("section", "?"), niter=len(it), nunk=e.get("unknowns", len(it)),
+            out.append(dict(sys=e["eqIndex"], section=e.get("section", "?"), niter=len(it), nunk=len(it) + len(inner),
                             cond=cond, amp=amp, res0=res0, startmax=smax, iters=" ".join(e["defines"])))
         except (OverflowError, ZeroDivisionError, np.linalg.LinAlgError):  # torn map not evaluable at the exact solution
-            out.append(dict(sys=e["eqIndex"], section=e.get("section", "?"), niter=len(e["defines"]), nunk=e.get("unknowns"),
+            out.append(dict(sys=e["eqIndex"], section=e.get("section", "?"), niter=len(e["defines"]), nunk=len(e["equation"][0]),
                             cond=float("inf"), amp=float("inf"), res0=float("inf"), startmax=float("inf"), iters=" ".join(e["defines"])))
         except Exception as x:
-            out.append(dict(sys=e["eqIndex"], section=e.get("section", "?"), niter=len(e.get("defines", [])), nunk=e.get("unknowns"), error=(type(x).__name__ + " " + str(x))[:80]))
+            out.append(dict(sys=e["eqIndex"], section=e.get("section", "?"), niter=len(e.get("defines", [])), nunk=len(e["equation"][0]), error=(type(x).__name__ + " " + str(x))[:80]))
     return out
 K = ["case", "family", "n", "k1", "k2", "k3", "seed", "variant", "sys", "section", "niter", "nunk", "cond", "amp", "res0", "startmax", "out", "iters"]
 print("\t".join(K))
