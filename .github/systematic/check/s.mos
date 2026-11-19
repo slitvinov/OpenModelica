@@ -1,0 +1,26 @@
+echo(false);
+installPackage(Modelica, "4.1.0+maint.om", exactMatch=true); loadModel(Modelica, {"4.1.0"});
+loadFile("D10.mo"); loadFile("NS6.mo"); loadFile("NS.mo"); getErrorString();
+r := simulate(D10, stopTime=0.1, numberOfIntervals=10, fileNamePrefix="D10O");
+r := simulate(NS6, stopTime=0.5, fileNamePrefix="NS6O");
+r := simulate(NS, stopTime=0.5, fileNamePrefix="NSO");
+r := simulate(Modelica.Blocks.Examples.Noise.UniformNoise, fileNamePrefix="UO"); print("old UniformNoise: " + r.messages + "\n");
+setCommandLineOptions("--newBackend");
+r := simulate(D10, stopTime=0.1, numberOfIntervals=10, fileNamePrefix="D10N");
+r := simulate(NS6, stopTime=0.5, fileNamePrefix="NS6N");
+r := simulate(NS, stopTime=0.5, fileNamePrefix="NSN");
+r := simulate(Modelica.Blocks.Examples.Noise.UniformNoise, fileNamePrefix="UN"); print("new UniformNoise: " + r.messages + "\n" + getErrorString());
+for b in {"O", "N"} loop
+  v := readSimulationResultVars("D10" + b + "_res.mat");
+  print("D10" + b + " result variables: " + sum(s + " " for s in v) + "\n");
+end for;
+for t in {0.01, 0.03, 0.05, 0.07} loop
+  print("D10 t=" + String(t) + " y old " + String(val(y, t, "D10O_res.mat")) + " new " + String(val(y, t, "D10N_res.mat")) + "\n");
+end for;
+for t in {0.05, 0.15, 0.25, 0.45} loop
+  print("NS6 t=" + String(t) + " state old " + String(val(state, t, "NS6O_res.mat")) + " new " + String(val(state, t, "NS6N_res.mat")) + " r old " + String(val(r, t, "NS6O_res.mat")) + " new " + String(val(r, t, "NS6N_res.mat")) + "\n");
+  print("NS t=" + String(t) + " state[1] old " + String(val(state[1], t, "NSO_res.mat")) + " new " + String(val(state[1], t, "NSN_res.mat")) + "\n");
+end for;
+for t in {0.1, 0.5, 1.0} loop
+  print("UniformNoise t=" + String(t) + " uniformNoise.y old " + String(val(uniformNoise.y, t, "UO_res.mat")) + " new " + String(val(uniformNoise.y, t, "UN_res.mat")) + "\n");
+end for;

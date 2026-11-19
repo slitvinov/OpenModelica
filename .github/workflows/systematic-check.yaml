@@ -1,0 +1,26 @@
+name: systematic-check
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-systematic]
+    paths: ['.github/systematic/check/**', '.github/workflows/systematic-check.yaml']
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/systematic/check
+      - name: repro
+        working-directory: .github/systematic/check
+        run: |
+          curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
+          mkdir om && tar -xzf om.tgz -C om
+          ./om/bin/omc --version
+          cat *.mo s.mos
+          ./om/bin/omc s.mos 2>&1 | grep -v '^clang '
