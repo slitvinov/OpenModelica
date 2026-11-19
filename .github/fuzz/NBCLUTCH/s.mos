@@ -1,0 +1,12 @@
+installPackage(Modelica, "4.1.0+maint.om", exactMatch=true); loadModel(Modelica, {"4.1.0"}); loadFile("C.mo"); getErrorString();
+r := simulate(C, stopTime = 1); print(getErrorString());
+r := simulate(Modelica.Mechanics.Rotational.Examples.CoupledClutches, fileNamePrefix = "CC"); print(getErrorString());
+setCommandLineOptions("--newBackend"); getErrorString();
+r := simulate(C, stopTime = 1, fileNamePrefix = "NB"); print(r.messages + getErrorString());
+r := simulate(Modelica.Mechanics.Rotational.Examples.CoupledClutches, fileNamePrefix = "NBCC"); print(r.messages + getErrorString());
+for t in {0, 0.25, 0.5, 1} loop
+  print("C t=" + String(t) + ": J1.w=" + String(val(J1.w, t)) + " clutch.tau=" + String(val(clutch.tau, t)) + " | newBackend J1.w=" + String(val(J1.w, t, "NB_res.mat")) + " clutch.tau=" + String(val(clutch.tau, t, "NB_res.mat")) + "\n");
+end for;
+for t in {0.5, 1, 1.5} loop
+  print("CoupledClutches t=" + String(t) + ": J1.w=" + String(val(J1.w, t, "CC_res.mat")) + " | newBackend J1.w=" + String(val(J1.w, t, "NBCC_res.mat")) + "\n");
+end for;
