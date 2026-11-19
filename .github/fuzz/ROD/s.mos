@@ -1,0 +1,10 @@
+echo(false);
+installPackage(Modelica, "4.1.0", exactMatch = true); getErrorString();
+loadModel(Modelica, {"4.1.0"}); loadFile("R.mo"); loadFile("B.mo"); getErrorString();
+r := simulate(R, fileNamePrefix = "OR"); r := simulate(B, fileNamePrefix = "OB");
+setCommandLineOptions("--newBackend");
+r := simulate(R, fileNamePrefix = "NR"); r := simulate(B, fileNamePrefix = "NB"); print(getErrorString());
+for m in {"R", "B"} loop
+  print(m + " old: rev.a(0) = " + String(val(rev.a, 0, "O" + m + "_res.mat")) + ", rev.phi(0.5) = " + String(val(rev.phi, 0.5, "O" + m + "_res.mat")) + "\n");
+  print(m + " new: rev.a(0) = " + String(val(rev.a, 0, "N" + m + "_res.mat")) + ", rev.phi(0.5) = " + String(val(rev.phi, 0.5, "N" + m + "_res.mat")) + "\n");
+end for;
