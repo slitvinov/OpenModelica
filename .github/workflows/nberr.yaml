@@ -1,8 +1,8 @@
-name: nbnot
+name: nberr
 on:
   workflow_dispatch:
   push:
-    branches: [ci-nbnot]
+    branches: [ci-nberr]
 
 permissions:
   contents: read
@@ -14,12 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: .github/fuzz/NBNOT
+          sparse-checkout: .github/fuzz/NBERR
       - name: repro
-        working-directory: .github/fuzz/NBNOT
+        working-directory: .github/fuzz/NBERR
         run: |
           curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
           mkdir om && tar -xzf om.tgz -C om
           ./om/bin/omc --version
-          echo '$ cat N.mo'; cat N.mo; echo '$ cat s.mos'; cat s.mos; echo '$ omc s.mos'
+          echo '$ cat E.mo'; cat E.mo; echo '$ cat s.mos'; cat s.mos; echo '$ omc s.mos'
           ./om/bin/omc s.mos 2>&1 | grep -v '^clang '

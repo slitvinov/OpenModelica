@@ -1,0 +1,9 @@
+echo(false);
+loadFile("E.mo");
+r := simulate(E, fileNamePrefix = "old"); print(r.messages + "\n");
+setCommandLineOptions("--newBackend");
+r := simulate(E, fileNamePrefix = "new"); print(r.messages + getErrorString() + "\n");
+for p in {"old", "new"} loop
+  f := p + "_res.mat";
+  print(p + ": last time = " + String(val(time, 1, f)) + ", x = " + String(val(x, 1, f)) + "\n");
+end for;
