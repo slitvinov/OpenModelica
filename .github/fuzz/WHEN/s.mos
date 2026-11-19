@@ -1,0 +1,12 @@
+echo(false);
+loadFile("NI.mo"); loadFile("CH.mo"); loadFile("E4.mo"); loadFile("E6.mo"); getErrorString();
+r := simulate(NI, stopTime = 1, fileNamePrefix = "ONI"); r := simulate(CH, stopTime = 2, fileNamePrefix = "OCH");
+r := simulate(E4, stopTime = 6, fileNamePrefix = "OE4"); r := simulate(E6, stopTime = 6, fileNamePrefix = "OE6");
+setCommandLineOptions("--newBackend");
+r := simulate(NI, stopTime = 1, fileNamePrefix = "NNI"); r := simulate(CH, stopTime = 2, fileNamePrefix = "NCH");
+r := simulate(E4, stopTime = 6, fileNamePrefix = "NE4"); r := simulate(E6, stopTime = 6, fileNamePrefix = "NE6"); print(getErrorString());
+for p in {"O", "N"} loop
+  print(p + " NI n(0.5) = " + String(val(n, 0.5, p + "NI_res.mat")) + "; CH n(1.5), e(1.5) = " + String(val(n, 1.5, p + "CH_res.mat")) + " " + String(val(e, 1.5, p + "CH_res.mat")));
+  print("; E4 d(1,3,5) = " + String(val(d, 1, p + "E4_res.mat")) + String(val(d, 3, p + "E4_res.mat")) + String(val(d, 5, p + "E4_res.mat")));
+  print("; E6 d(1,3,5) = " + String(val(d, 1, p + "E6_res.mat")) + String(val(d, 3, p + "E6_res.mat")) + String(val(d, 5, p + "E6_res.mat")) + "\n");
+end for;
