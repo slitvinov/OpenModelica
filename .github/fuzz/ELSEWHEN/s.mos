@@ -1,0 +1,15 @@
+echo(false);
+installPackage(Modelica, "4.1.0", exactMatch = true); getErrorString();
+loadModel(Modelica, {"4.1.0"}); loadFile("W1.mo"); loadFile("W2.mo"); getErrorString();
+r := simulate(W1, stopTime = 6, fileNamePrefix = "OW1"); r := simulate(W2, stopTime = 6, fileNamePrefix = "OW2");
+r := simulate(Modelica.Blocks.Examples.BooleanNetwork1, fileNamePrefix = "OBN");
+setCommandLineOptions("--newBackend");
+r := simulate(W1, stopTime = 6, fileNamePrefix = "NW1"); r := simulate(W2, stopTime = 6, fileNamePrefix = "NW2");
+r := simulate(Modelica.Blocks.Examples.BooleanNetwork1, fileNamePrefix = "NBN"); print(getErrorString());
+for m in {"W1", "W2"} loop
+  print(m + " old: d(1), d(3), d(5) = " + String(val(d, 1, "O" + m + "_res.mat")) + " " + String(val(d, 3, "O" + m + "_res.mat")) + " " + String(val(d, 5, "O" + m + "_res.mat")) + "\n");
+  print(m + " new: d(1), d(3), d(5) = " + String(val(d, 1, "N" + m + "_res.mat")) + " " + String(val(d, 3, "N" + m + "_res.mat")) + " " + String(val(d, 5, "N" + m + "_res.mat")) + "\n");
+end for;
+for t in {1.0, 3.0, 4.5, 6.0, 8.0} loop
+  print("BooleanNetwork1 t = " + String(t) + ": onDelay.u = " + String(val(onDelay.u, t, "OBN_res.mat")) + ", onDelay.y old = " + String(val(onDelay.y, t, "OBN_res.mat")) + ", new = " + String(val(onDelay.y, t, "NBN_res.mat")) + "\n");
+end for;
