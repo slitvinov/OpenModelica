@@ -1,0 +1,6 @@
+loadFile("A.mo"); getErrorString();
+r := simulate(A); print(r.messages + "\n" + getErrorString());
+setCommandLineOptions("--generateDynamicJacobian=symbolic"); getErrorString();
+r := simulate(A); print(r.messages + "\n" + getErrorString());
+installPackage(Buildings, "13.0.1", exactMatch = true); loadModel(Buildings, {"13.0.1"}); getErrorString();
+translateModel(Buildings.Examples.VAVReheat.ASHRAE2006); print(getErrorString());
