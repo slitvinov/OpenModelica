@@ -1,6 +1,8 @@
-loadFile("A.mo"); getErrorString();
+echo(false);
+loadFile("A.mo");
 r := simulate(A); print(r.messages + "\n" + getErrorString());
-setCommandLineOptions("--generateDynamicJacobian=symbolic"); getErrorString();
+setCommandLineOptions("--generateDynamicJacobian=symbolic");
 r := simulate(A); print(r.messages + "\n" + getErrorString());
 installPackage(Buildings, "13.0.1", exactMatch = true); loadModel(Buildings, {"13.0.1"}); getErrorString();
-translateModel(Buildings.Examples.VAVReheat.ASHRAE2006); print(getErrorString());
+ok := translateModel(Buildings.Examples.VAVReheat.ASHRAE2006);
+(n, m) := regex(getErrorString(), "\\[BackEnd/Differentiate.*", 1); print("ASHRAE2006: " + String(ok) + "\n" + m[1]);
