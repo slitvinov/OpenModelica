@@ -1,0 +1,15 @@
+echo(false);
+installPackage(Modelica, "4.1.0"); loadModel(Modelica, {"4.1.0"});
+r := simulate(Modelica.Electrical.Analog.Examples.CauerLowPassSC, method = "dassl", tolerance = 1e-10, fileNamePrefix = "ref");
+x0 := readSimulationResult("ref_res.mat", {C1.v, C2.v, C3.v, C4.v, C7.v, R1.Capacitor.v, R2.Capacitor.v, R3.Capacitor.v, R4.Capacitor.v, R5.Capacitor.v, R7.Capacitor.v, R8.Capacitor.v, R9.Capacitor.v, R10.Capacitor.v, R11.Capacitor.v, Rp1.Capacitor.v});
+m := {"gbode", "gbode", "gbode", "gbode", "dassl"}; f := {"-gbm=esdirk4", "-gbm=esdirk4", "-gbm=esdirk4 -gbctrl_evnt_reinit", "-gbm=esdirk2", ""}; tol := {1e-3, 1e-4, 1e-4, 1e-4, 1e-4};
+for i in 1:5 loop
+  r := simulate(Modelica.Electrical.Analog.Examples.CauerLowPassSC, method = m[i], tolerance = tol[i], simflags = f[i] + " -lv=LOG_STATS", fileNamePrefix = "run");
+  x := readSimulationResult("run_res.mat", {C1.v, C2.v, C3.v, C4.v, C7.v, R1.Capacitor.v, R2.Capacitor.v, R3.Capacitor.v, R4.Capacitor.v, R5.Capacitor.v, R7.Capacitor.v, R8.Capacitor.v, R9.Capacitor.v, R10.Capacitor.v, R11.Capacitor.v, Rp1.Capacitor.v});
+  (n, s) := regex(r.messages, "([0-9]+) steps taken", 2);
+  print(m[i] + " " + f[i] + " tolerance " + String(tol[i]) + ": max |x - x_ref| = " + String(max(abs(x - x0))) + ", " + s[2] + " steps\n");
+end for;
+r := simulate(Modelica.Electrical.Analog.Examples.CauerLowPassSC, method = "gbode", tolerance = 1e-4, simflags = "-gbm=esdirk4 -lv=LOG_SOLVER -lv_time=2.74,2.76", fileNamePrefix = "trace"); print(r.messages);
+print("R1.Capacitor.v at t = 2.76: reference " + String(val(R1.Capacitor.v, 2.76, "ref_res.mat")) + ", esdirk4 " + String(val(R1.Capacitor.v, 2.76, "trace_res.mat")) + "\n");
+r := simulate(Modelica.Electrical.Analog.Examples.CauerLowPassSC, method = "gbode", tolerance = 1e-4, simflags = "-gbm=esdirk4 -gbctrl_evnt_reinit -lv=LOG_SOLVER -lv_time=2.74,2.76", fileNamePrefix = "trace2");
+(n, q) := regex(r.messages, "Initial step size = [^\n]* at time 2.75", 1); print("-gbctrl_evnt_reinit: " + q[1] + "\n");
