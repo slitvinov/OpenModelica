@@ -1,0 +1,23 @@
+echo(false);
+installPackage(PowerSystems, "2.0.0", exactMatch = true); loadModel(PowerSystems, {"2.0.0"}); loadFile("F.mo"); loadFile("P.mo");
+r := simulate(PowerSystems.Examples.Generic.Test.FixedLoadTest, stopTime = 1e-3, fileNamePrefix = "old"); print(r.messages);
+r := simulate(F, stopTime = 1e-3, fileNamePrefix = "old_vstart"); print(r.messages);
+r := simulate(P, stopTime = 1e-3, fileNamePrefix = "P_old"); print(r.messages);
+setCommandLineOptions("--newBackend");
+r := simulate(PowerSystems.Examples.Generic.Test.FixedLoadTest, stopTime = 1e-3, fileNamePrefix = "new"); print(r.messages);
+r := simulate(P, stopTime = 1e-3, fileNamePrefix = "P_new"); print(r.messages + getErrorString());
+for p in {"old", "old_vstart", "new"} loop
+  f := p + "_res.mat";
+  v1 := val(load.terminal.v[1], 0, f); v2 := val(load.terminal.v[2], 0, f); i1 := val(line.i[1], 0, f); i2 := val(line.i[2], 0, f);
+  vs := val(source.terminal.v[1], 0, f); X := val(line.omegaRef, 0, f)*1.6/314;
+  print(p + ": load.terminal.v = {" + String(v1) + ", " + String(v2) + "}, line.I = " + String(val(line.I, 0, f))
+    + ", load P = " + String(v1*i1 + v2*i2) + ", line loss = " + String(1.2*(i1^2 + i2^2)) + ", source P = " + String(vs*i1)
+    + ", residuals " + String(vs - v1 - (1.2*i1 - X*i2)) + " " + String(0 - v2 - (1.2*i2 + X*i1))
+    + " " + String(v1*i1 + v2*i2 - 2.7076e6) + " " + String(v2*i1 - v1*i2 - 2.7076e6/3) + "\n");
+end for;
+for p in {"P_old", "P_new"} loop
+  f := p + "_res.mat";
+  v1 := val(v1, 0, f); v2 := val(v2, 0, f); i1 := val(i1, 0, f); i2 := val(i2, 0, f);
+  print(p + ": v = {" + String(v1) + ", " + String(v2) + "}, |i| = " + String(sqrt(i1^2 + i2^2))
+    + ", load P = " + String(v1*i1 + v2*i2) + ", line loss = " + String(1.2*(i1^2 + i2^2)) + ", source P = " + String(1e4*i1) + "\n");
+end for;
