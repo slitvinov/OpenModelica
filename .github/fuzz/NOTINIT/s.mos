@@ -1,0 +1,7 @@
+echo(false);
+loadFile("E.mo"); loadFile("A.mo"); getErrorString();
+r := simulate(E, fileNamePrefix = "OE"); r := simulate(A, fileNamePrefix = "OA");
+setCommandLineOptions("--newBackend");
+r := simulate(E, fileNamePrefix = "NE"); r := simulate(A, fileNamePrefix = "NA"); print(getErrorString());
+print("E old: n = " + String(val(n, 0.5, "OE_res.mat")) + ", new: n = " + String(val(n, 0.5, "NE_res.mat")) + "\n");
+print("A old: n = " + String(val(n, 0.5, "OA_res.mat")) + ", new: n = " + String(val(n, 0.5, "NA_res.mat")) + "\n");
