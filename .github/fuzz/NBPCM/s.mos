@@ -1,0 +1,6 @@
+installPackage(Buildings, "13.0.1", exactMatch=true); loadModel(Buildings, {"13.0.1"}); getErrorString();
+r := translateModel(Buildings.HeatTransfer.Examples.ConductorSingleLayerPCM); print("ConductorSingleLayerPCM: " + String(r) + "\n" + getErrorString());
+r := translateModel(Buildings.Fluid.Actuators.Valves.Examples.TwoWayValvesMotor); print("TwoWayValvesMotor: " + String(r) + "\n" + getErrorString());
+setCommandLineOptions("--newBackend");
+r := translateModel(Buildings.HeatTransfer.Examples.ConductorSingleLayerPCM); print("newBackend ConductorSingleLayerPCM: " + String(r) + "\n" + getErrorString());
+r := translateModel(Buildings.Fluid.Actuators.Valves.Examples.TwoWayValvesMotor); print("newBackend TwoWayValvesMotor: " + String(r) + "\n" + getErrorString());
