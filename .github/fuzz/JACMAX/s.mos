@@ -1,0 +1,7 @@
+loadFile("J.mo"); loadFile("K.mo"); getErrorString();
+r := simulate(J); print(r.messages + "\n" + getErrorString());
+setCommandLineOptions("--generateDynamicJacobian=symbolic"); getErrorString();
+r := simulate(K); print(r.messages + "\n" + getErrorString());
+r := simulate(J); print(r.messages + "\n" + getErrorString());
+installPackage(Buildings, "13.0.1", exactMatch = true); loadModel(Buildings, {"13.0.1"}); getErrorString();
+translateModel(Buildings.Examples.HydronicHeating.TwoRoomsWithStorage); print(getErrorString());
