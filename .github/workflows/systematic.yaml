@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [ci-systematic]
-    paths: ['.github/systematic/run.py', '.github/systematic/compl/**', '.github/systematic/vote/**', '.github/systematic/libs/**', '.github/workflows/systematic.yaml']
+    paths: ['.github/systematic/run.py', '.github/systematic/compl/**', '.github/systematic/libs/**']
 
 permissions:
   contents: read
@@ -35,28 +35,6 @@ jobs:
         with:
           name: compl-${{ matrix.shard }}
           path: out
-
-  vote:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          sparse-checkout: .github/systematic
-      - name: omc
-        run: |
-          curl -sSfLo om.tgz $OMURL && mkdir om && tar -xzf om.tgz -C om && rm om.tgz
-          ./om/bin/omc --version
-          echo 'installPackage(Modelica, "4.1.0+maint.om", exactMatch=true); getErrorString();' > i.mos && ./om/bin/omc i.mos
-      - name: repros
-        run: |
-          OMC=$PWD/om/bin/omc
-          for d in .github/systematic/vote/*/*/; do
-            for s in $d/run*.mos; do
-              echo "================ $d $(basename $s)"
-              (cd $d && for f in *.mo; do echo "--- $f"; cat $f; done; echo "--- $(basename $s)"; cat $(basename $s); echo "--- output"; timeout -s KILL 1200 $OMC $(basename $s) 2>&1 | grep -v '^clang ' | cut -c1-400)
-            done
-          done
 
   libs:
     runs-on: ubuntu-24.04
