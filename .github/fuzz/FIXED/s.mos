@@ -1,0 +1,10 @@
+echo(false);
+installPackage(Modelica, "4.1.0", exactMatch = true); getErrorString();
+loadModel(Modelica, {"4.1.0"}); loadFile("F.mo"); loadFile("A.mo"); getErrorString();
+r := simulate(F, fileNamePrefix = "OF"); r := simulate(A, fileNamePrefix = "OA");
+setCommandLineOptions("--newBackend");
+r := simulate(F, fileNamePrefix = "NF"); r := simulate(A, fileNamePrefix = "NA"); print(getErrorString());
+print("F old: x = " + String(val(x, 0.5, "OF_res.mat")) + ", y = " + String(val(y, 0.5, "OF_res.mat")) + "\n");
+print("F new: x = " + String(val(x, 0.5, "NF_res.mat")) + ", y = " + String(val(y, 0.5, "NF_res.mat")) + "\n");
+print("A old: amb1.T = " + String(val(amb1.T, 0.5, "OA_res.mat")) + "\n");
+print("A new: amb1.T = " + String(val(amb1.T, 0.5, "NA_res.mat")) + "\n");
