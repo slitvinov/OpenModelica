@@ -1,7 +1,9 @@
-loadFile("J.mo"); loadFile("K.mo"); getErrorString();
+echo(false);
+loadFile("J.mo"); loadFile("K.mo");
 r := simulate(J); print(r.messages + "\n" + getErrorString());
-setCommandLineOptions("--generateDynamicJacobian=symbolic"); getErrorString();
+setCommandLineOptions("--generateDynamicJacobian=symbolic");
 r := simulate(K); print(r.messages + "\n" + getErrorString());
 r := simulate(J); print(r.messages + "\n" + getErrorString());
 installPackage(Buildings, "13.0.1", exactMatch = true); loadModel(Buildings, {"13.0.1"}); getErrorString();
-translateModel(Buildings.Examples.HydronicHeating.TwoRoomsWithStorage); print(getErrorString());
+ok := translateModel(Buildings.Examples.HydronicHeating.TwoRoomsWithStorage);
+(n, m) := regex(getErrorString(), "\\[BackEnd/Differentiate.*", 1); print("TwoRoomsWithStorage: " + String(ok) + "\n" + m[1]);
