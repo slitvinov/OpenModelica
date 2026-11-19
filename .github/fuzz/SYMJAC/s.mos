@@ -1,8 +1,10 @@
 echo(false);
-loadFile("M.mo"); loadFile("I.mo");
+loadFile("M.mo"); loadFile("K.mo"); loadFile("I.mo"); loadFile("J.mo");
 setCommandLineOptions("--generateDynamicJacobian=symbolic");
-r := simulate(M); print(r.messages + "\n" + getErrorString());
-r := simulate(I); print(r.messages + "\n" + getErrorString());
+r := simulate(M); print("M: " + r.messages + "\n" + getErrorString());
+r := simulate(K); print("K: " + r.messages + "\n" + getErrorString());
+r := simulate(I); print("I: " + r.messages + "\n" + getErrorString());
+r := simulate(J); print("J: " + r.messages + "\n" + getErrorString());
 setCommandLineOptions("--newBackend");
 r := simulate(M, fileNamePrefix = "NBM"); print("newBackend M: " + r.messages + "\n" + getErrorString());
 r := simulate(I, fileNamePrefix = "NBI"); print("newBackend I: " + r.messages + "\n" + getErrorString());
