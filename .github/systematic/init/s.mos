@@ -1,0 +1,9 @@
+echo(false);
+loadFile("R.mo");
+r := simulate(R, stopTime = 1, fileNamePrefix = "old"); print(r.messages);
+setCommandLineOptions("--newBackend");
+r := simulate(R, stopTime = 1, fileNamePrefix = "new"); print(r.messages + getErrorString());
+for p in {"old", "new", "physical"} loop
+  if p == "physical" then T1 := 288; T2 := 288; else T1 := val(T1, 0, p + "_res.mat"); T2 := val(T2, 0, p + "_res.mat"); end if;
+  print(p + ": T1 = " + String(T1) + ", T2 = " + String(T2) + ", residuals " + String(6e-8*(T2^4 - T1^4) - 25*(T1 - 288)) + " " + String(0.1*(288 - T2) - 6e-8*(T2^4 - T1^4)) + "\n");
+end for;

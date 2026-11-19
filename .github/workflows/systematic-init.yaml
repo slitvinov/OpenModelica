@@ -1,0 +1,42 @@
+name: systematic-init
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-systematic]
+    paths: ['.github/systematic/init/**', '.github/workflows/systematic-init.yaml']
+
+permissions:
+  contents: read
+
+jobs:
+  init:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [ZH7065, ZB7007, ZB7060]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/systematic
+      - name: omc
+        run: |
+          curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz && mkdir om && tar -xzf om.tgz -C om && rm om.tgz
+          ./om/bin/omc --version
+      - name: minimal two-node network
+        if: matrix.model == 'ZH7065'
+        working-directory: .github/systematic/init
+        run: |
+          cat R.mo s.mos
+          ../../../om/bin/omc s.mos 2>&1 | grep -v '^clang '
+      - name: parameter points
+        run: |
+          cat .github/systematic/init/*.mo
+          python3 .github/systematic/init/init.py ${{ matrix.model }} 200
+          cat out/${{ matrix.model }}.tsv
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: init-${{ matrix.model }}
+          path: out/*.tsv
