@@ -1,0 +1,5 @@
+loadFile("SD.mo"); loadFile("SE.mo"); getErrorString();
+r := simulate(SD, stopTime=1, fileNamePrefix="SDO"); print("old SD: " + r.messages + "\n");
+setCommandLineOptions("--newBackend");
+r := simulate(SD, stopTime=1, fileNamePrefix="SDN"); print("new SD: " + r.messages + "\n"); print(getErrorString());
+r := simulate(SE, stopTime=1, fileNamePrefix="SEN"); print("new SE: " + r.messages + "\n"); print(getErrorString());

@@ -1,0 +1,7 @@
+loadModel(Modelica, {"4.1.0"}); loadFile("AT4.mo"); loadFile("AT5.mo"); loadFile("AT3.mo"); getErrorString();
+r := simulate(AT4, stopTime=1, numberOfIntervals=4, fileNamePrefix="O4");
+setCommandLineOptions("--newBackend");
+r := simulate(AT4, stopTime=1, numberOfIntervals=4, fileNamePrefix="N4"); r := simulate(AT5, stopTime=1, numberOfIntervals=4, fileNamePrefix="N5"); r := simulate(AT3, stopTime=1, numberOfIntervals=4, fileNamePrefix="N3"); getErrorString();
+print("AT4 old T=" + String(val(T, 0.5, "O4_res.mat")) + " new T=" + String(val(T, 0.5, "N4_res.mat")) + " new h/cp=" + String(val(h, 0.5, "N4_res.mat")/2010) + "\n");
+print("AT5 (fixed attribute removed) new T=" + String(val(T, 0.5, "N5_res.mat")) + "\n");
+print("AT3 (MSL FluidHeatFlow Ambient) new amb1.T=" + String(val(amb1.T, 0.5, "N3_res.mat")) + " amb1.TAmbient=" + String(val(amb1.TAmbient, 0.5, "N3_res.mat")) + "\n");

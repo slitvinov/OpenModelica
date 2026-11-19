@@ -1,0 +1,5 @@
+loadModel(Modelica, {"4.1.0"}); loadFile("RP.mo"); loadFile("RQ.mo"); getErrorString();
+r := simulate(RP, stopTime=1, fileNamePrefix="RPO"); print("old RP: " + r.messages + "\n"); print(getErrorString());
+r := simulate(RQ, stopTime=1, fileNamePrefix="RQO"); print("old RQ: " + r.messages + "\n"); print(getErrorString());
+setCommandLineOptions("--newBackend");
+r := simulate(RP, stopTime=1, fileNamePrefix="RPN"); print("new RP: " + r.messages + "\n"); print(getErrorString());

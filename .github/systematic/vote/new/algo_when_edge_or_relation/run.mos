@@ -1,0 +1,8 @@
+loadFile("S1.mo"); loadFile("S2.mo"); loadFile("S3.mo"); loadFile("S4.mo"); getErrorString();
+r := simulate(S1, stopTime=2, fileNamePrefix="S1O"); print("old S1: " + r.messages + "\n");
+setCommandLineOptions("--newBackend");
+r := simulate(S1, stopTime=2, fileNamePrefix="S1N"); print("new S1: " + r.messages + "\n"); print(getErrorString());
+r := simulate(S2, stopTime=2, fileNamePrefix="S2N"); print("new S2: " + r.messages + "\n"); print(getErrorString());
+r := simulate(S3, stopTime=2, fileNamePrefix="S3N"); print("new S3: " + r.messages + "\n"); print(getErrorString());
+r := simulate(S4, stopTime=2, fileNamePrefix="S4N"); print("new S4: " + r.messages + "\n"); print(getErrorString());
+for t in {0.5, 1.5, 1.9} loop print("t=" + String(t) + " old n=" + String(val(n, t, "S1O_res.mat")) + "\n"); end for;

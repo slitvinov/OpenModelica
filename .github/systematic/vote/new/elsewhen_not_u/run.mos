@@ -1,0 +1,5 @@
+loadFile("W1.mo"); loadFile("W2.mo"); getErrorString();
+r := simulate(W1, stopTime=6, fileNamePrefix="W1O"); r := simulate(W2, stopTime=6, fileNamePrefix="W2O");
+setCommandLineOptions("--newBackend");
+r := simulate(W1, stopTime=6, fileNamePrefix="W1N"); r := simulate(W2, stopTime=6, fileNamePrefix="W2N"); getErrorString();
+for m in {"W1", "W2"} loop for t in {1, 3, 5} loop print(m + " t=" + String(t) + " old d=" + String(val(d, t, m + "O_res.mat")) + " new d=" + String(val(d, t, m + "N_res.mat")) + "\n"); end for; end for;

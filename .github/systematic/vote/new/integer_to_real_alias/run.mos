@@ -1,0 +1,5 @@
+loadFile("IR2.mo"); getErrorString();
+r := simulate(IR2, stopTime=1, fileNamePrefix="O"); print("old IR2: " + r.messages + "\n");
+print("old x(1) = " + String(val(x, 1, "O_res.mat")) + " (exact 0.5)\n");
+setCommandLineOptions("--newBackend");
+r := simulate(IR2, stopTime=1, fileNamePrefix="N"); print("new IR2: " + r.messages + "\n"); print(getErrorString());

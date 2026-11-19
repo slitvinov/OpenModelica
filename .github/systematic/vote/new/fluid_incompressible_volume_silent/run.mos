@@ -1,0 +1,7 @@
+loadModel(Modelica, {"4.1.0"}); loadFile("Zfluid2051.mo"); getErrorString();
+r := simulate(Zfluid2051, stopTime=63.4, numberOfIntervals=200, fileNamePrefix="O"); print("old: " + r.messages + "\n");
+print("old vol1.medium.p(30) = " + String(val(vol1.medium.p, 30, "O_res.mat")) + "\n");
+setCommandLineOptions("--newBackend");
+r := simulate(Zfluid2051, stopTime=63.4, numberOfIntervals=200, fileNamePrefix="N"); print("new: " + r.messages + "\n"); print(getErrorString());
+setCommandLineOptions("-d=failtrace");
+r := simulate(Zfluid2051, stopTime=63.4, numberOfIntervals=200, fileNamePrefix="N"); print(getErrorString());

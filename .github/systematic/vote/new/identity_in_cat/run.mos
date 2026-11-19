@@ -1,0 +1,5 @@
+loadFile("I1.mo"); loadFile("I2.mo"); getErrorString();
+r := simulate(I1, stopTime=1, fileNamePrefix="I1O"); print("old I1: " + r.messages + "\n");
+setCommandLineOptions("--newBackend");
+r := simulate(I1, stopTime=1, fileNamePrefix="I1N"); print("new I1: " + r.messages + "\n"); print(getErrorString());
+r := simulate(I2, stopTime=1, fileNamePrefix="I2N"); print("new I2: " + r.messages + "\n"); print(getErrorString());

@@ -1,0 +1,5 @@
+loadFile("M1498.mo"); getErrorString();
+r := simulate(M1498_P.M1498, stopTime=2, numberOfIntervals=20, tolerance=1e-8, fileNamePrefix="O");
+setCommandLineOptions("--newBackend");
+r := simulate(M1498_P.M1498, stopTime=2, numberOfIntervals=20, tolerance=1e-8, fileNamePrefix="N");
+print("x2(0): old " + String(val(x2, 0, "O_res.mat")) + " new " + String(val(x2, 0, "N_res.mat")) + " (fixed start -0.904)\n");

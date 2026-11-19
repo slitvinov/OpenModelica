@@ -1,0 +1,5 @@
+loadModel(Modelica, {"4.1.0"}); loadFile("MB.mo"); getErrorString();
+r := simulate(MB, stopTime=1, numberOfIntervals=50, tolerance=1e-8, fileNamePrefix="O"); print("old: " + r.messages + "\n");
+setCommandLineOptions("--newBackend");
+r := simulate(MB, stopTime=1, numberOfIntervals=50, tolerance=1e-8, fileNamePrefix="N"); print("new: " + r.messages + "\n"); print(getErrorString());
+for t in {0.0, 0.06, 0.5} loop print("t=" + String(t) + " old a=" + String(val(rev1.a, t, "O_res.mat")) + " phi=" + String(val(rev1.phi, t, "O_res.mat")) + " | new a=" + String(val(rev1.a, t, "N_res.mat")) + " phi=" + String(val(rev1.phi, t, "N_res.mat")) + "\n"); end for;

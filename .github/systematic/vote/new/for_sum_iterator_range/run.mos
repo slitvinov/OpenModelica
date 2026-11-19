@@ -1,0 +1,6 @@
+loadFile("R1.mo"); loadFile("R2.mo"); getErrorString();
+r := simulate(R1, stopTime=1, fileNamePrefix="R1O"); print("old R1: " + r.messages + "\n");
+print("old c[3](1) = " + String(val(c[3], 1, "R1O_res.mat")) + " exact 3*exp(-1) = " + String(3*exp(-1)) + "\n");
+setCommandLineOptions("--newBackend");
+r := simulate(R1, stopTime=1, fileNamePrefix="R1N"); print("new R1: " + r.messages + "\n"); print(getErrorString());
+r := simulate(R2, stopTime=1, fileNamePrefix="R2N"); print("new R2: " + r.messages + "\n"); print(getErrorString());

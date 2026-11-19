@@ -1,0 +1,6 @@
+loadFile("NS6.mo"); loadFile("NS7.mo"); loadFile("NS.mo"); getErrorString();
+r := simulate(NS6, stopTime=0.5, fileNamePrefix="NS6O"); print("old NS6: " + r.messages + "\n");
+print("old state(0.15) = " + String(val(state, 0.15, "NS6O_res.mat")) + "\n");
+setCommandLineOptions("--newBackend");
+r := simulate(NS6, stopTime=0.5, fileNamePrefix="NS6N"); print("new NS6: " + r.messages + "\n"); print(getErrorString());
+r := simulate(NS, stopTime=0.5, fileNamePrefix="NSN"); print("new NS: " + r.messages + "\n"); print(getErrorString());

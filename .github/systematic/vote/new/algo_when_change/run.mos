@@ -1,0 +1,5 @@
+loadFile("CH.mo"); getErrorString();
+r := simulate(CH, stopTime=2, numberOfIntervals=20, fileNamePrefix="O");
+setCommandLineOptions("--newBackend");
+r := simulate(CH, stopTime=2, numberOfIntervals=20, fileNamePrefix="N"); print(getErrorString());
+for t in {0.2, 0.5, 1.0, 1.5, 2.0} loop print("t=" + String(t) + " old n=" + String(val(n, t, "O_res.mat")) + " e=" + String(val(e, t, "O_res.mat")) + " | new n=" + String(val(n, t, "N_res.mat")) + " e=" + String(val(e, t, "N_res.mat")) + "\n"); end for;

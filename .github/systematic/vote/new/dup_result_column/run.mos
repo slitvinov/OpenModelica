@@ -1,0 +1,5 @@
+loadFile("D10.mo"); loadFile("D4.mo"); getErrorString();
+r := simulate(D10, stopTime=0.1, numberOfIntervals=10, fileNamePrefix="D10O");
+setCommandLineOptions("--newBackend");
+r := simulate(D10, stopTime=0.1, numberOfIntervals=10, fileNamePrefix="D10N"); r := simulate(D4, stopTime=0.1, numberOfIntervals=10, fileNamePrefix="D4N"); getErrorString();
+print("val(y, 0.05) new = " + String(val(y, 0.05, "D10N_res.mat")) + "\n");

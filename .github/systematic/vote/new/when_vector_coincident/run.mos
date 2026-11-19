@@ -1,0 +1,5 @@
+loadFile("EC.mo"); getErrorString();
+r := simulate(EC, stopTime=1.2, numberOfIntervals=12, fileNamePrefix="O");
+setCommandLineOptions("--newBackend");
+r := simulate(EC, stopTime=1.2, numberOfIntervals=12, fileNamePrefix="N"); getErrorString();
+for t in {0.1, 0.6, 0.9, 1.1} loop print("t=" + String(t) + " old n=" + String(val(n, t, "O_res.mat")) + " new n=" + String(val(n, t, "N_res.mat")) + "\n"); end for;

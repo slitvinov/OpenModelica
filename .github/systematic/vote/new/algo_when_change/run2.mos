@@ -1,0 +1,3 @@
+loadFile("CH2.mo"); getErrorString();
+setCommandLineOptions("--newBackend");
+r := simulate(CH2, stopTime=2, numberOfIntervals=20, fileNamePrefix="CH2N"); print("CH2 new n(1.5)=" + String(val(n, 1.5, "CH2N_res.mat")) + "\n");

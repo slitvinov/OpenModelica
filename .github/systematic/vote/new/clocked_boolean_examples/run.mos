@@ -1,0 +1,5 @@
+loadModel(Modelica, {"4.1.0"}); getErrorString();
+r := simulate(Modelica.Clocked.Examples.Elementary.BooleanSignals.BackSample, stopTime=0.09, numberOfIntervals=90, fileNamePrefix="O");
+setCommandLineOptions("--newBackend");
+r := simulate(Modelica.Clocked.Examples.Elementary.BooleanSignals.BackSample, stopTime=0.09, numberOfIntervals=90, fileNamePrefix="N"); print(getErrorString());
+for t in {0.005, 0.02, 0.03, 0.05, 0.07, 0.085} loop print("t=" + String(t) + " old shiftSample1.y=" + String(val(shiftSample1.y, t, "O_res.mat")) + " backSample1.y=" + String(val(backSample1.y, t, "O_res.mat")) + " | new shiftSample1.y=" + String(val(shiftSample1.y, t, "N_res.mat")) + " backSample1.y=" + String(val(backSample1.y, t, "N_res.mat")) + "\n"); end for;

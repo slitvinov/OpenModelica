@@ -1,0 +1,5 @@
+loadFile("D7.mo"); getErrorString();
+r := simulate(D7, stopTime=1, fileNamePrefix="D7O"); print("old D7: " + r.messages + "\n");
+setCommandLineOptions("--newBackend");
+r := simulate(D7, stopTime=1, fileNamePrefix="D7N"); print("new D7: " + r.messages + "\n"); print(getErrorString());
+print("old j(1)=" + String(val(j, 1, "D7O_res.mat")) + " exact -8*exp(-2)=" + String(-8*exp(-2)) + "\n");

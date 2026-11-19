@@ -1,0 +1,5 @@
+loadFile("D9.mo"); loadFile("D11.mo"); getErrorString();
+r := simulate(D9, stopTime=0.1, fileNamePrefix="D9O"); print(r.messages);
+setCommandLineOptions("--newBackend");
+r := simulate(D9, stopTime=0.1, fileNamePrefix="D9N"); print(r.messages); print(getErrorString());
+r := simulate(D11, stopTime=0.1, fileNamePrefix="D11N"); print(r.messages); print(getErrorString());

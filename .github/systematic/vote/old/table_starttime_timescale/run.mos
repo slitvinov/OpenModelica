@@ -1,0 +1,5 @@
+loadModel(Modelica, {"4.1.0"}); loadFile("TT.mo"); getErrorString();
+r := simulate(TT, stopTime=3, fileNamePrefix="O"); print(getErrorString());
+setCommandLineOptions("--newBackend");
+r := simulate(TT, stopTime=3, fileNamePrefix="N"); print(getErrorString());
+for t in {0.02, 0.5, 1.0, 2.0} loop print("t=" + String(t) + " old y=" + String(val(tab.y[1], t, "O_res.mat")) + " new y=" + String(val(tab.y[1], t, "N_res.mat")) + "\n"); end for;

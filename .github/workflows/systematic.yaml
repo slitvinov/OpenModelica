@@ -1,0 +1,89 @@
+name: systematic
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-systematic]
+    paths: ['.github/systematic/run.py', '.github/systematic/compl/**', '.github/systematic/vote/**', '.github/systematic/libs/**', '.github/workflows/systematic.yaml']
+
+permissions:
+  contents: read
+
+env:
+  OMURL: https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
+
+jobs:
+  compliance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/systematic
+      - name: omc
+        run: |
+          curl -sSfLo om.tgz $OMURL && mkdir om && tar -xzf om.tgz -C om && rm om.tgz
+          ./om/bin/omc --version
+          git clone -q https://github.com/modelica/Modelica-Compliance.git mclib && git -C mclib checkout -q 9734eb101c1adf3bc59ee2ec999e53fffbc13f4b && git -C mclib log -1 --format='ModelicaCompliance %H %cd'
+      - name: run
+        run: J=4 python3 .github/systematic/run.py compl ${{ matrix.shard }} 8
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: compl-${{ matrix.shard }}
+          path: out
+
+  vote:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/systematic
+      - name: omc
+        run: |
+          curl -sSfLo om.tgz $OMURL && mkdir om && tar -xzf om.tgz -C om && rm om.tgz
+          ./om/bin/omc --version
+          echo 'installPackage(Modelica, "4.1.0+maint.om", exactMatch=true); getErrorString();' > i.mos && ./om/bin/omc i.mos
+      - name: repros
+        run: |
+          OMC=$PWD/om/bin/omc
+          for d in .github/systematic/vote/*/*/; do
+            for s in $d/run*.mos; do
+              echo "================ $d $(basename $s)"
+              (cd $d && for f in *.mo; do echo "--- $f"; cat $f; done; echo "--- $(basename $s)"; cat $(basename $s); echo "--- output"; timeout -s KILL 1200 $OMC $(basename $s) 2>&1 | grep -v '^clang ' | cut -c1-400)
+            done
+          done
+
+  libs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        lib: [IBPSA, AixLib, BuildingSystems, PowerSystems, ModelicaTest, ThermoPower]
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/systematic
+      - name: omc
+        run: |
+          curl -sSfLo om.tgz $OMURL && mkdir om && tar -xzf om.tgz -C om && rm om.tgz
+          ./om/bin/omc --version
+          case ${{ matrix.lib }} in
+            IBPSA|BuildingSystems) V=master;; AixLib) V=3.0.1;; ThermoPower) V=4.0.0-dev;; PowerSystems) V=2.0.0;; ModelicaTest) V=4.1.0+maint.om;;
+          esac
+          printf 'updatePackageIndex(); getErrorString();\ninstallPackage(%s, "%s", exactMatch=true); getErrorString();\nloadModel(%s); getErrorString();\nprint(getVersion(%s) + "\\n");\n' ${{ matrix.lib }} $V ${{ matrix.lib }} ${{ matrix.lib }} > i.mos
+          ./om/bin/omc i.mos
+          ls ~/.openmodelica/libraries/
+      - name: run
+        run: J=3 python3 .github/systematic/run.py lib ${{ matrix.lib }} ${{ matrix.shard }} 3
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: lib-${{ matrix.lib }}-${{ matrix.shard }}
+          path: out
