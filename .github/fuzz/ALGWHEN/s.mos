@@ -1,0 +1,7 @@
+echo(false);
+loadFile("C.mo"); loadFile("D.mo"); getErrorString();
+r := simulate(C, fileNamePrefix = "OC"); r := simulate(D, fileNamePrefix = "OD");
+setCommandLineOptions("--newBackend");
+r := simulate(C, fileNamePrefix = "NC"); r := simulate(D, fileNamePrefix = "ND"); print(getErrorString());
+print("C old: n, e = " + String(val(n, 1, "OC_res.mat")) + " " + String(val(e, 1, "OC_res.mat")) + ", new: n, e = " + String(val(n, 1, "NC_res.mat")) + " " + String(val(e, 1, "NC_res.mat")) + "\n");
+print("D old: n, e = " + String(val(n, 1, "OD_res.mat")) + " " + String(val(e, 1, "OD_res.mat")) + ", new: n, e = " + String(val(n, 1, "ND_res.mat")) + " " + String(val(e, 1, "ND_res.mat")) + "\n");
