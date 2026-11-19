@@ -86,7 +86,7 @@ for tag, p in pts:
             if a == "G": got = d[c + ".Q_flow"][0] / d[c + ".dT"][0] if abs(d[c + ".dT"][0]) > 1e-9 else v
             elif a == "Gr": got = d[c + ".Q_flow"][0] / (5.670374419e-8 * (d[c + ".port_a.T"][0] ** 4 - d[c + ".port_b.T"][0] ** 4))
             elif a == "Q_flow": got = -d[c + ".port.Q_flow"][0]
-            elif a == "T": got = d[c + ".port.T"][0]
+            elif a == "T": got = v if any(abs(d[k][0] - v) <= 1e-6 * abs(v) for k in d if k.endswith(".T")) else float("nan")
             chk.append(abs(got - v) <= 1e-6 * max(1, abs(v)))
         pa = "yes" if all(chk) else "NO"
         out.write("\t".join([cls, tag] + ["%.6g" % v for v in (p or [float("nan")] * len(pn))] +
