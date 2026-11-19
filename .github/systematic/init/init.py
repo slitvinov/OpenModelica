@@ -22,10 +22,10 @@ pre = 'installPackage(Modelica, "4.1.0+maint.om", exactMatch=true); loadModel(Mo
 if cls == "Zbheat7007s":
     pre = 'installPackage(Buildings, "13.0.1", exactMatch=true); loadModel(Buildings, {"13.0.1"}); getErrorString();\n'
 mos = pre + 'loadFile("%s/%s.mo"); loadFile("%s/%sR.mo"); print(getErrorString());\n' % (HERE, cls, HERE, cls)
-mos += 'r := buildModel(%s, stopTime = 1e-3, numberOfIntervals = 2, fileNamePrefix = "old"); print("build old: " + r[1] + "\\n" + getErrorString());\n' % cls
-mos += 'r := buildModel(%sR, stopTime = 1e8, numberOfIntervals = 100, fileNamePrefix = "relax"); print("build relax: " + r[1] + "\\n" + getErrorString());\n' % cls
+mos += 'r := buildModel(%s, stopTime = 1e-3, numberOfIntervals = 2, outputFormat = "csv", fileNamePrefix = "old"); print("build old: " + r[1] + "\\n" + getErrorString());\n' % cls
+mos += 'r := buildModel(%sR, stopTime = 1e8, numberOfIntervals = 100, outputFormat = "csv", fileNamePrefix = "relax"); print("build relax: " + r[1] + "\\n" + getErrorString());\n' % cls
 mos += 'setCommandLineOptions("--newBackend");\n'
-mos += 'r := buildModel(%s, stopTime = 1e-3, numberOfIntervals = 2, fileNamePrefix = "new"); print("build new: " + r[1] + "\\n" + getErrorString());\n' % cls
+mos += 'r := buildModel(%s, stopTime = 1e-3, numberOfIntervals = 2, outputFormat = "csv", fileNamePrefix = "new"); print("build new: " + r[1] + "\\n" + getErrorString());\n' % cls
 open(wd + "/b.mos", "w").write(mos)
 print(subprocess.run([OMC, "b.mos"], cwd=wd, capture_output=True, text=True).stdout)
 
@@ -40,7 +40,7 @@ def rd(f):
 
 def run(exe, tag, ov):
     o = "%s/%s_%s.csv" % (wd, exe, tag)
-    args = ["./" + exe, "-r=" + o, "-override=outputFormat=csv" + ("," + ov if ov else "")]
+    args = ["./" + exe, "-r=" + o] + (["-override=" + ov] if ov else [])
     try:
         p = subprocess.run(args, cwd=wd, capture_output=True, text=True, timeout=300)
         log = p.stdout + p.stderr
