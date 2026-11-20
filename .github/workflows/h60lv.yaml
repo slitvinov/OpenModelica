@@ -1,0 +1,34 @@
+name: h60lv
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-h60lv]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/h60
+      - name: h60lv
+        working-directory: .github/h60
+        run: |
+          curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
+          mkdir om && tar -xzf om.tgz -C om
+          export PATH=$PWD/om/bin:$PATH
+          omc --version
+          echo '$ omc s.mos'
+          omc s.mos
+          echo '$ ./def -lv=LOG_NLS,LOG_NLS_V > nls.log'
+          ./def -lv=LOG_NLS,LOG_NLS_V > nls.log || true
+          echo '$ cat table.awk'
+          cat table.awk
+          echo '$ awk -f table.awk nls.log'
+          awk -f table.awk nls.log
+          echo '$ grep -n -E "Initial guess values|fScaling$|current retry|errorCode" nls.log | head -25'
+          grep -n -E "Initial guess values|fScaling$|current retry|errorCode" nls.log | head -25
