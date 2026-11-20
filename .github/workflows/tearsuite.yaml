@@ -7,6 +7,9 @@ on:
 permissions:
   contents: read
 
+env:
+  OMC_URL: https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
+
 jobs:
   linux:
     runs-on: ubuntu-24.04
@@ -18,7 +21,66 @@ jobs:
       - name: tearsuite
         working-directory: .github/tearsuite
         run: |
-          curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
+          curl -sSfLo om.tgz "$OMC_URL"
           mkdir om && tar -xzf om.tgz -C om
           ./om/bin/omc --version
           python3 ci.py om/bin/omc | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # the 480 cases of gen.py, every 12th case per job
+  generated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/tearsuite
+      - name: shard ${{ matrix.shard }}
+        working-directory: .github/tearsuite
+        run: |
+          curl -sSfLo om.tgz "$OMC_URL"
+          mkdir om && tar -xzf om.tgz -C om
+          ./om/bin/omc --version | tee version.txt
+          python3 -c 'import numpy' || python3 -m pip install --user --break-system-packages numpy
+          mkdir out
+          python3 suite.py om/bin/omc ${{ matrix.shard }} 12 out
+          cp version.txt out/version-${{ matrix.shard }}.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shard-${{ matrix.shard }}
+          path: |
+            .github/tearsuite/out/res-*.tsv
+            .github/tearsuite/out/ana-*.tsv
+            .github/tearsuite/out/version-*.txt
+          if-no-files-found: error
+
+  tables:
+    needs: generated
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/tearsuite
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: shard-*
+          merge-multiple: true
+          path: shards
+      - name: tables
+        run: |
+          cd shards
+          (head -n1 res-0.tsv; tail -qn+2 $(ls res-*.tsv | sort -V)) > ../res.tsv
+          (head -n1 ana-0.tsv; tail -qn+2 $(ls ana-*.tsv | sort -V)) > ../ana.tsv
+          cd ..
+          { echo "omc: $(sort -u shards/version-*.txt | paste -sd' ')"; echo; python3 .github/tearsuite/tables.py res.tsv ana.tsv; } | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tearsuite-tsv
+          path: |
+            res.tsv
+            ana.tsv
+          if-no-files-found: error
