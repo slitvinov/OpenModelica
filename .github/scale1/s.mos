@@ -1,0 +1,17 @@
+echo(false);
+loadFile("S.mo");
+for o in {"S1", "S", "S --newBackend"} loop
+  if o == "S --newBackend" then setCommandLineOptions("--newBackend"); end if;
+  r := if o == "S1" then simulate(S1, stopTime = 1) else simulate(S, stopTime = 1);
+  print("### " + (if o == "S" then "S, old backend" elseif o == "S1" then "S1 (s = 1), old backend" else o) + "\n");
+  l := strtok(r.messages, "\n"); n := 0; p := "";
+  for i in 1:size(l, 1) loop
+    if regexBool(l[i], "is -?nan") then n := n + 1;
+    elseif l[i] <> p then print(l[i] + "\n"); p := l[i]; end if;
+  end for;
+  if n > 0 then print("(" + String(n) + " lines: Iteration variable `z2` is nan)\n"); end if;
+  if r.resultFile <> "" then
+    sc := if o == "S1" then 1 else 1e-9;
+    print("x = " + String(val(z1, 0, r.resultFile)/sc) + " " + String(val(z2, 0, r.resultFile)/sc) + " " + String(val(z3, 0, r.resultFile)/sc) + " " + String(val(z4, 0, r.resultFile)/sc) + " " + String(val(z5, 0, r.resultFile)/sc) + "\n");
+  end if;
+end for;
