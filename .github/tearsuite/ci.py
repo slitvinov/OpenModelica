@@ -19,7 +19,7 @@ for mo in sorted(glob.glob("cases/*.mo")):
             p = subprocess.run(["./" + v] + s.split(), cwd=d, capture_output=True, text=True, timeout=600)
             try:
                 rows = list(csv.reader(open("%s/%s_res.csv" % (d, v)))); h = rows[0]
-                e = max(abs(float(r[h.index(k)]) - x) / (abs(x) + 1e-3) for r in rows[1:] for k, x in ex.items())
+                e = max((lambda d: d if d == d else float("inf"))(abs(float(r[h.index(k)]) - x) / (abs(x) + 1e-3)) for r in rows[1:] for k, x in ex.items())  # NaN counts as not OK
             except Exception: e = None
             cells.append("FAIL" if p.returncode or e is None else ("OK" if e < 1e-4 else "WRONG %.0e" % e))
     print("| %s | %s |" % (name, " | ".join(cells)), flush=True)
