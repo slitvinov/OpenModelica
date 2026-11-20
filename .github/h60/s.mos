@@ -1,0 +1,9 @@
+echo(false);
+loadFile("H60.mo");
+for o in {"", "--tearingMethod=noTearing"} loop
+  setCommandLineOptions(if o == "" then "--tearingMethod=cellier" else o);
+  r := simulate(H60, stopTime = 1, fileNamePrefix = if o == "" then "def" else "noT");
+  print("### " + (if o == "" then "old backend, default" else o) + "\n" + r.messages + "\n");
+  f := r.resultFile;
+  print("T[1] = " + String(val(T[1], 0, f)) + ", T[2] = " + String(val(T[2], 0, f)) + ", T[3] = " + String(val(T[3], 0, f)) + "\n");
+end for;
