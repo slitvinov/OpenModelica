@@ -1500,6 +1500,9 @@ constant ConfigFlag WARN_NON_STANDARD_MODELICA = CONFIG_FLAG(176, "warnNonStanda
 constant ConfigFlag MAX_ARRAY_EXPANSION = CONFIG_FLAG(177, "maxArrayExpansion",
   NONE(), EXTERNAL(), INT_FLAG(256), NONE(),
   "Sets the maximum array size that the new backend expands into elements (default 256).");
+constant ConfigFlag TEARING_MAX_AMPLIFICATION = CONFIG_FLAG(178, "tearingMaxAmplification",
+  NONE(), EXTERNAL(), REAL_FLAG(0.0), NONE(),
+  "Discards the tearing of a linear or non-linear system if, in units of the nominal values, the substitution through the torn equations amplifies a change of an iteration variable by more than this factor. Jacobian entries are taken at the start values. 0 (the default) disables the check.");
 
 function getFlags
   "Loads the flags with getGlobalRoot. Assumes flags have been loaded."

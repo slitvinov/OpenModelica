@@ -1192,6 +1192,8 @@ public constant ErrorTypes.Message TEARING_NOT_WORTH_IT = ErrorTypes.MESSAGE(626
   "Tearing is skipped for linear strong component %s: solving it torn to %s iteration variables is estimated at %s flops against %s for the untorn system of size %s.");
 public constant ErrorTypes.Message TEARING_AMPLIFIES_ERROR = ErrorTypes.MESSAGE(627, ErrorTypes.SYMBOLIC(), ErrorTypes.NOTIFICATION(),
   "Tearing is skipped for linear strong component %s: substituting through its %s inner equations amplifies an error by 1e%s, which double precision cannot carry.");
+public constant ErrorTypes.Message TEARING_EXCEEDS_MAX_AMPLIFICATION = ErrorTypes.MESSAGE(637, ErrorTypes.SYMBOLIC(), ErrorTypes.NOTIFICATION(),
+  "Tearing is skipped for %s strong component %s: in units of the nominal values, substituting through its %s inner equations amplifies a change by %s, more than --tearingMaxAmplification=%s.");
 
 public constant ErrorTypes.Message MATCH_SHADOWING = ErrorTypes.MESSAGE(5001, ErrorTypes.TRANSLATION(), ErrorTypes.ERROR(),
   "Local variable '%s' shadows another variable.");

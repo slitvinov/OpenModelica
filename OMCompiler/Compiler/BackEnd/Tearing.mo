@@ -54,6 +54,7 @@ import BackendDAEUtil;
 import BackendDump;
 import BackendEquation;
 import BackendVariable;
+import Ceval;
 import ComponentReference;
 import ComponentReferenceBasics;
 import Config;
@@ -74,6 +75,7 @@ import MetaModelica.Dangerous;
 import Mutable;
 import UnorderedSet;
 import Util;
+import ValuesUtil;
 import Sorting;
 import System;
 import ElementSource;
@@ -361,7 +363,7 @@ algorithm
         try
           oComp := callTearingMethod(inMethod, isyst, ishared, eindex, vindx, ojac, jacType, mixedSystem, strongComponentIndexOut);
           outRunMatching := true;
-          if not tearingPaysOff(oComp, ishared, eindex, vindx, ojac, jacType, strongComponentIndexOut, isLinear) then
+          if not tearingPaysOff(oComp, isyst, ishared, eindex, vindx, ojac, jacType, strongComponentIndexOut, isLinear) then
             oComp := inComp;
             outRunMatching := false;
           end if;
@@ -433,8 +435,13 @@ protected function tearingPaysOff
 "Keeps the torn system unless solving it untorn is clearly cheaper, or unless
  substituting through the inner equations amplifies an error past what a double
  carries. The torn matrix does not exist yet, so both its structure and that
- amplification come from walking the substitution. Costs are in flops."
+ amplification come from walking the substitution. Costs are in flops.
+ With --tearingMaxAmplification > 0 the amplification is measured in units of
+ the nominal values, the Jacobian entries of non-linear systems are taken at the
+ start values, and linear and non-linear systems whose amplification exceeds the
+ limit are not torn."
   input BackendDAE.StrongComponent tornComp;
+  input BackendDAE.EqSystem syst;
   input BackendDAE.Shared shared;
   input list<Integer> eindex;
   input list<Integer> vindx;
@@ -458,9 +465,14 @@ protected
   array<list<tuple<Integer, Real>>> eqDeps "local equation index -> the local variables it depends on and their coefficients";
   array<Integer> tvarId, solvedBy, stamp, depth;
   array<Real> growth "error amplification of the forward substitution, iteration variables being 1";
+  array<Real> nominal "nominal value of each local variable, 1 unless --tearingMaxAmplification is set";
   Integer n, nnz, t, m, row, col, v, w, eq, cnt, nnzA, maxRowA, maxDepth, d, valued = 0;
   Real density, densityA, buildTorn, costDense, costSparse, costTornDense, costTornSparse;
   Real costTorn, costUntorn, rn, rt, g, coeff, pivot, maxGrowth, digitsLost;
+  Real maxAmplification = Flags.getConfigReal(Flags.TEARING_MAX_AMPLIFICATION);
+  Boolean nominalCheck = maxAmplification > 0.0;
+  Real step, maxStep = 1.0, maxInnerGrowth = 0.0, amplification;
+  Option<BackendDAE.Variables> startVars;
   Boolean known, isValued;
 algorithm
   (jac, tvars, residuals, innerEquations, known) := match (ojac, tornComp)
@@ -479,12 +491,22 @@ algorithm
   m := listLength(innerEquations);
 
   globalKnownVars := BackendDAEUtil.getGlobalKnownVarsFromShared(shared);
+  // the scaled entries |df_j/dx_k| * nominal(x_k) of (Casella and Braun, 2017), unknowns at their start values
+  startVars := if nominalCheck then SOME(syst.orderedVars) else NONE();
+  nominal := arrayCreate(n, 1.0);
+  if nominalCheck then
+    cnt := 0;
+    for gv in vindx loop
+      cnt := cnt + 1;
+      arrayUpdate(nominal, cnt, varNominalMagnitude(BackendVariable.getVarAt(syst.orderedVars, gv), globalKnownVars));
+    end for;
+  end if;
   eqDeps := arrayCreate(n, {});
   for entry in jac loop
     (row, col, dEqn) := entry;
-    (coeff, isValued) := jacEntryMagnitude(dEqn, globalKnownVars);
+    (coeff, isValued) := jacEntryMagnitude(dEqn, globalKnownVars, startVars);
     valued := valued + (if isValued then 1 else 0);
-    arrayUpdate(eqDeps, row, (col, coeff) :: eqDeps[row]);
+    arrayUpdate(eqDeps, row, (col, coeff * nominal[col]) :: eqDeps[row]);
   end for;
 
   // inner equations come in solve order, so one pass gives every depth and growth
@@ -511,6 +533,7 @@ algorithm
     d := 0;
     g := 0.0;
     pivot := 0.0;
+    step := 0.0;
     for dep in eqDeps[eq] loop
       w := Util.tuple21(dep);
       coeff := Util.tuple22(dep);
@@ -519,9 +542,16 @@ algorithm
       else
         d := intMax(d, depth[w]);
         g := g + coeff * growth[w];
+        step := step + coeff;
       end if;
     end for;
     g := if pivot > 0.0 then g / pivot else g;
+    // magnitude of the right-hand side against the nominal value of the solved variable, either way round
+    // (only reported: it also flags variables that have no nominal value although they need one)
+    if pivot > 0.0 and step > 0.0 then
+      maxStep := realMax(maxStep, realMax(step / pivot, pivot / step));
+    end if;
+    maxInnerGrowth := realMax(maxInnerGrowth, g);
     for v in innerVars loop
       arrayUpdate(solvedBy, v, eq);
       arrayUpdate(depth, v, d + 1);
@@ -594,12 +624,26 @@ algorithm
           + " tornFormat=" + (if SimCodeCodegenUtil.useSparseSolver(t, nnzA, isLinear) then "sparse" else "dense") + "\n");
   end if;
 
+  if nominalCheck then
+    amplification := realMax(maxGrowth, maxInnerGrowth);
+    if Flags.isSet(Flags.TEARING_COST) then
+      print("[tearingCost] component " + intString(strongComponentIndex) + " nominal step=" + realString(maxStep)
+            + " growth=" + realString(amplification) + " limit=" + realString(maxAmplification) + "\n");
+    end if;
+    if amplification > maxAmplification and intReal(valued) >= trustedCoeffs * intReal(nnz) then
+      Error.addMessage(Error.TEARING_EXCEEDS_MAX_AMPLIFICATION, {(if isLinear then "linear" else "nonlinear"),
+        intString(strongComponentIndex), intString(m), realString(amplification), realString(maxAmplification)});
+      keep := false;
+      return;
+    end if;
+  end if;
+
   // a nonlinear system's cost is its Newton iterations, which this does not model
   if not isLinear then
     return;
   end if;
 
-  if digitsLost >= precisionDigits and intReal(valued) >= trustedCoeffs * intReal(nnz) then
+  if not nominalCheck and digitsLost >= precisionDigits and intReal(valued) >= trustedCoeffs * intReal(nnz) then
     Error.addMessage(Error.TEARING_AMPLIFIES_ERROR, {intString(strongComponentIndex), intString(m),
                                                      intString(realInt(digitsLost))});
     keep := false;
@@ -612,40 +656,80 @@ algorithm
 end tearingPaysOff;
 
 protected function jacEntryMagnitude
-"Magnitude of one Jacobian entry, parameters taken at their bound value. Entries
- that are not a number at compile time count as 1."
+"Magnitude of one Jacobian entry, parameters taken at their bound value and, if
+ startVars is given, its variables at their start value. Entries that are not a
+ number at compile time count as 1."
   input BackendDAE.Equation dEqn;
   input BackendDAE.Variables globalKnownVars;
+  input Option<BackendDAE.Variables> startVars = NONE();
+  output Real magnitude;
+  output Boolean known;
+algorithm
+  (magnitude, known) := match dEqn
+    case BackendDAE.RESIDUAL_EQUATION() then expMagnitude(dEqn.exp, globalKnownVars, startVars);
+    else (1.0, false);
+  end match;
+end jacEntryMagnitude;
+
+protected function varNominalMagnitude
+"The nominal value of a variable as a number, 1 if it has none or it is not a number at compile time."
+  input BackendDAE.Var var;
+  input BackendDAE.Variables globalKnownVars;
+  output Real magnitude;
+protected
+  Boolean known;
+algorithm
+  if BackendVariable.varHasNominalValue(var) then
+    (magnitude, known) := expMagnitude(BackendVariable.varNominalValue(var), globalKnownVars, NONE());
+    if not known or magnitude <= 0.0 then
+      magnitude := 1.0;
+    end if;
+  else
+    magnitude := 1.0;
+  end if;
+end varNominalMagnitude;
+
+protected function expMagnitude
+  input DAE.Exp inExp;
+  input BackendDAE.Variables globalKnownVars;
+  input Option<BackendDAE.Variables> startVars;
   output Real magnitude;
   output Boolean known;
 protected
-  DAE.Exp exp;
+  DAE.Exp exp = inExp;
 algorithm
-  (magnitude, known) := matchcontinue dEqn
-    case BackendDAE.RESIDUAL_EQUATION() algorithm
-      exp := dEqn.exp;
+  (magnitude, known) := matchcontinue ()
+    case () algorithm
       for i in 1:3 loop
         if Expression.isScalarConst(exp) then
           break;
         end if;
-        (exp, _) := Expression.traverseExpBottomUp(exp, substituteKnownVar, globalKnownVars);
+        (exp, _) := Expression.traverseExpBottomUp(exp, substituteKnownVar, (globalKnownVars, startVars));
         (exp, _) := ExpressionSimplify.simplify(exp);
       end for;
+      // ExpressionSimplify leaves calls such as cosh(0.0) alone
+      if isSome(startVars) and not Expression.isScalarConst(exp) and Expression.isConst(exp) then
+        exp := ValuesUtil.valueExp(Ceval.cevalSimple(exp));
+      end if;
     then (abs(Expression.toReal(exp)), true);
     else (1.0, false);
   end matchcontinue;
-end jacEntryMagnitude;
+end expMagnitude;
 
 protected function substituteKnownVar
   input output DAE.Exp exp;
-  input output BackendDAE.Variables globalKnownVars;
+  input output tuple<BackendDAE.Variables, Option<BackendDAE.Variables>> vars "parameters, and variables to take at their start value";
 algorithm
-  exp := matchcontinue exp
+  exp := matchcontinue (exp, vars)
     local
       BackendDAE.Var var;
-    case DAE.CREF() algorithm
-      (var, _) := BackendVariable.getVarSingle(exp.componentRef, globalKnownVars);
+      BackendDAE.Variables startVars;
+    case (DAE.CREF(), _) algorithm
+      (var, _) := BackendVariable.getVarSingle(exp.componentRef, Util.tuple21(vars));
     then BackendVariable.varBindExp(var);
+    case (DAE.CREF(), (_, SOME(startVars))) algorithm
+      (var, _) := BackendVariable.getVarSingle(exp.componentRef, startVars);
+    then BackendVariable.varStartValue(var);
     else exp;
   end matchcontinue;
 end substituteKnownVar;

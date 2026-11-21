@@ -112,6 +112,7 @@ Tearing18-cel.mos \
 Tearing18-celMC3.mos \
 RemoveConstantsTearing.mos \
 WhenElsewhenLoop.mos \
+tearingMaxAmplification.mos \
 
 # test that currently fail. Move up when fixed.
 # Run make testfailing

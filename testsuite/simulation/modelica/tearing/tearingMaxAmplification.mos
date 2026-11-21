@@ -1,0 +1,48 @@
+// name:      tearingMaxAmplification
+// keywords:  tearing
+// status:    correct
+//
+// The cellier tearing of this system amplifies a change of its iteration
+// variables by more than 1e5 and the solver does not converge. With
+// --tearingMaxAmplification=1e5 the system is not torn and the solution is
+// x = {0.198, -0.46, -0.078, -0.161, 0.558}.
+
+loadString("
+model TearingAmplification
+  Real x1, x2, x3, x4, x5;
+equation
+  1.385*x1 - 9.329*x2 + 22.7*x3 - 53.46*x4 + 0.6629*x5 + 0.4945*exp(x1) = 12.374705103744803;
+  26.11*x2 + 9.329*x1 - 0.01854*x3 + 11.55*x2^3 = -11.286242679999999;
+  3.723*x3 - 22.7*x1 + 0.01854*x2 - 6.054*x4 + 2.057*x3^3 = -3.8198045534640004;
+  0.3249*x4 + 53.46*x1 + 6.054*x3 + 36.3*x5 + 0.1254*exp(x4) = 30.422711125716837;
+  85.69*x5 - 0.6629*x1 - 36.3*x4 + 41.59*x5^3 = 60.753958648080001;
+end TearingAmplification;
+"); getErrorString();
+setCommandLineOptions("--tearingMaxAmplification=1e5"); getErrorString();
+simulate(TearingAmplification, stopTime=1, numberOfIntervals=1); getErrorString();
+val(x1, 1.0);
+val(x2, 1.0);
+val(x3, 1.0);
+val(x4, 1.0);
+val(x5, 1.0);
+
+// Result:
+// true
+// ""
+// true
+// ""
+// record SimulationResult
+//     resultFile = "TearingAmplification_res.mat",
+//     simulationOptions = "startTime = 0.0, stopTime = 1.0, numberOfIntervals = 1, tolerance = 1e-6, method = 'auto', fileNamePrefix = 'TearingAmplification', options = '', outputFormat = 'mat', variableFilter = '.*', cflags = '', simflags = ''",
+//     messages = "LOG_SUCCESS       | info    | The initialization finished successfully without homotopy method.
+// LOG_SUCCESS       | info    | The simulation finished successfully.
+// "
+// end SimulationResult;
+// "Notification: Tearing is skipped for nonlinear strong component 1: in units of the nominal values, substituting through its 3 inner equations amplifies a change by 161074.0182987533, more than --tearingMaxAmplification=1e5.
+// "
+// 0.198
+// -0.46
+// -0.078
+// -0.161
+// 0.558
+// endResult
