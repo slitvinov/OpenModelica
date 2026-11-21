@@ -27,9 +27,8 @@ jobs:
             echo '$ cat M.mo'; cat M.mo
             echo '$ cat s.mos'; cat s.mos
             echo '$ cat a.awk'; cat a.awk
-            echo '$ for N in 2 4 6 8 10 12 14 16 18 20; do N=$N omc s.mos | awk -v N=$N -f a.awk - F_res.csv G_res.csv; done'
-            echo ' N    amp   error success'
-            for N in 2 4 6 8 10 12 14 16 18 20; do N=$N omc s.mos | awk -v N=$N -f a.awk - F_res.csv G_res.csv; done
+            echo '$ echo " N    amp   error success"; for N in 2 4 6 8 10 12 14 16 18 20; do N=$N omc s.mos | awk -v N=$N -f a.awk - F_res.csv G_res.csv; done'
+            echo " N    amp   error success"; for N in 2 4 6 8 10 12 14 16 18 20; do N=$N omc s.mos | awk -v N=$N -f a.awk - F_res.csv G_res.csv; done
             echo '```'
             echo
             python3 pred.py om/bin/omc
