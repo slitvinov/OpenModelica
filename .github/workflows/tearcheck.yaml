@@ -1,0 +1,103 @@
+name: tearcheck
+on:
+  workflow_dispatch:
+  push:
+    branches: [tearcheck]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: submodules
+        run: |
+          git config submodule.OMCompiler/3rdParty.url https://github.com/OpenModelica/OMCompiler-3rdParty.git
+          git config submodule.OMCompiler/Compiler/boot/bomc.url https://github.com/OpenModelica/OMBootstrapping.git
+          git submodule update --init --depth 1 OMCompiler/3rdParty OMCompiler/Compiler/boot/bomc
+          git -C OMCompiler/3rdParty submodule update --init --recursive --depth 1
+      - name: dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake gfortran ccache flex pkg-config default-jdk-headless \
+            libblas-dev liblapack-dev libcurl4-gnutls-dev uuid-dev gettext libexpat1-dev zlib1g-dev \
+            libminizip-dev autoconf automake libtool > /dev/null
+          cargo --version
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/ccache
+          key: ccache-${{ github.sha }}
+          restore-keys: ccache-
+      - name: build
+        run: |
+          export CCACHE_DIR=~/.cache/ccache CCACHE_MAXSIZE=2G
+          cmake -S . -B build_cmake -DCMAKE_BUILD_TYPE=Release -DOM_USE_CCACHE=ON \
+            -DOM_ENABLE_GUI_CLIENTS=OFF -DOM_ENABLE_OMSIMULATOR=OFF -DOM_ENABLE_TESTSUITE=OFF \
+            -DOM_OMC_ENABLE_CPP_RUNTIME=OFF -DOM_OMC_ENABLE_MOO=OFF -DOM_OMC_ENABLE_OPTIMIZATION=OFF
+          cmake --build build_cmake --target install --parallel 4 > build.log 2>&1 || { tail -100 build.log; exit 1; }
+          build_cmake/install_cmake/bin/omc --version
+          tar -C build_cmake -czf omc.tgz install_cmake
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: omc
+          path: omc.tgz
+          retention-days: 3
+
+  # the 480 cases of gen.py, every 12th case per job, with the check off and on
+  suite:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/tearsuite
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: omc
+      - name: shard ${{ matrix.shard }}
+        run: |
+          sudo apt-get install -y -qq liblapack-dev libblas-dev libminizip-dev libcurl4-gnutls-dev > /dev/null
+          tar -xzf omc.tgz
+          OMC=$PWD/install_cmake/bin/omc
+          $OMC --version
+          cd .github/tearsuite
+          python3 tsuite.py $OMC off "" ${{ matrix.shard }} 12
+          python3 tsuite.py $OMC a1e5 --tearingMaxAmplification=1e5 ${{ matrix.shard }} 12
+          python3 tsuite.py $OMC a1e4 --tearingMaxAmplification=1e4 ${{ matrix.shard }} 12
+          mkdir -p ../../res
+          for r in off a1e5 a1e4; do cp $r/res-${{ matrix.shard }}.tsv ../../res/$r-${{ matrix.shard }}.tsv; done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: res-${{ matrix.shard }}
+          path: res/*.tsv
+          if-no-files-found: error
+
+  tables:
+    needs: suite
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/tearsuite
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: res-*
+          merge-multiple: true
+          path: res
+      - name: tables
+        run: |
+          for r in off a1e5 a1e4; do (head -n1 res/$r-0.tsv; tail -qn+2 $(ls res/$r-*.tsv | sort -V)) > $r.tsv; done
+          python3 .github/tearsuite/tcmp.py off=off.tsv 1e5=a1e5.tsv 1e4=a1e4.tsv | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tearcheck-tsv
+          path: "*.tsv"
