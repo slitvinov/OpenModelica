@@ -1,0 +1,36 @@
+name: tearamp
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-tearamp]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/tearamp
+      - name: tearamp
+        working-directory: .github/tearamp
+        run: |
+          curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
+          mkdir om && tar -xzf om.tgz -C om
+          export PATH=$PWD/om/bin:$PATH
+          omc --version | tee -a "$GITHUB_STEP_SUMMARY"
+          {
+            echo '```'
+            echo '$ cat M.mo'; cat M.mo
+            echo '$ cat s.mos'; cat s.mos
+            echo '$ cat a.awk'; cat a.awk
+            echo '$ for N in 2 4 6 8 10 12 14 16 18 20; do N=$N omc s.mos | awk -v N=$N -f a.awk - F_res.csv G_res.csv; done'
+            echo ' N    amp   error success'
+            for N in 2 4 6 8 10 12 14 16 18 20; do N=$N omc s.mos | awk -v N=$N -f a.awk - F_res.csv G_res.csv; done
+            echo '```'
+            echo
+            python3 pred.py om/bin/omc
+          } | tee -a "$GITHUB_STEP_SUMMARY"

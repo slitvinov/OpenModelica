@@ -1,0 +1,3 @@
+loadFile("M.mo"); loadString("model F = M(N=" + getEnvironmentVar("N") + ");");
+setCommandLineOptions("-d=tearingCost"); simulate(F, outputFormat="csv");
+setCommandLineOptions("--tearingMethod=noTearing"); simulate(F, outputFormat="csv", fileNamePrefix="G");
