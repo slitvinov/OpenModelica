@@ -12,6 +12,12 @@ char *ModelicaAllocateString(size_t n) { return calloc(n + 1, 1); }
 char *ModelicaDuplicateString(const char *s) { return strdup(s); }
 char *ModelicaDuplicateStringWithErrorReturn(const char *s) { return strdup(s); }
 
+static int nopen(void) {
+  int fd, n = 0;
+  for (fd = 0; fd < 4096; fd++) n += fcntl(fd, F_GETFD) != -1;
+  return n;
+}
+
 static void *reader(void *p) {
   int i, eof;
   for (i = 0; i < 1000; i++) {
@@ -22,13 +28,13 @@ static void *reader(void *p) {
 }
 
 int main(int argc, char **argv) {
-  int i, fd, n = 0, nt = atoi(argv[1]);
+  int i, n, nt = atoi(argv[1]);
   pthread_t t[4];
   FILE *f = fopen("f.txt", "w");
   fputs("a\nb\n", f);
   fclose(f);
+  n = nopen();
   for (i = 0; i < nt; i++) pthread_create(&t[i], NULL, reader, NULL);
   for (i = 0; i < nt; i++) pthread_join(t[i], NULL);
-  for (fd = 3; fd < 4096; fd++) n += fcntl(fd, F_GETFD) != -1;
-  printf("%d %d\n", nt, n);
+  printf("%d %d\n", nt, nopen() - n);
 }
