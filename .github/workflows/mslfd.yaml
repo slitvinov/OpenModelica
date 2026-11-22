@@ -1,0 +1,16 @@
+name: msl-readline-fdleak
+on: push
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: t.c with MSL master
+        run: |
+          git clone -q https://github.com/modelica/ModelicaStandardLibrary msl
+          git -C msl log -1 --format='MSL %H %cd'
+          cc --version | head -1
+          S=msl/Modelica/Resources/C-Sources
+          cat t.c
+          cc -O2 -pthread -I$S t.c $S/ModelicaInternal.c -o t
+          for n in 1 2 4; do ./t $n; done
