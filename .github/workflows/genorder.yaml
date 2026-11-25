@@ -1,0 +1,29 @@
+name: genorder
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci-genorder]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/fuzz/GENORDER
+      - name: repro
+        working-directory: .github/fuzz/GENORDER
+        run: |
+          curl -sSfLo om.tgz https://build.openmodelica.org/omc/rust/latest/OpenModelica-CLI-latest-x86_64-linux.tar.gz
+          mkdir om && tar -xzf om.tgz -C om
+          ./om/bin/omc --version
+          echo 'installPackage(Modelica, "4.0.0+maint.om", exactMatch=true); getErrorString();' > i.mos
+          ./om/bin/omc i.mos
+          curl -sSfLo ps.zip https://github.com/modelica-3rdparty/PowerSystems/archive/1ecfd2648d7cd54ed88926594455b713186529de.zip
+          unzip -q ps.zip && mv PowerSystems-1ecfd2648d7cd54ed88926594455b713186529de/PowerSystems .
+          cat s.mos
+          ./om/bin/omc s.mos 2>&1 | grep -v '^clang '
