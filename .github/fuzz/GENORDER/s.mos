@@ -1,15 +1,12 @@
 loadModel(Modelica, {"4.0.0"}); getErrorString();
 loadFile("PowerSystems/package.mo"); getErrorString();
-res := simulate(PowerSystems.Examples.AC3ph.Generation.GenOrder3and7, stopTime=0.05, simflags="-emit_protected");
-getErrorString();
-p := "turboGen2.generator.";
-for r in 1:2 loop
-  lhs := val(stringVariableName(p + "psi_rd[" + String(r) + "]"), 0.05);
-  rhs := val(stringVariableName(p + "L_md[" + String(r) + "]"), 0.05) * val(stringVariableName(p + "i_s[1]"), 0.05)
-    + val(stringVariableName(p + "L_rd[" + String(r) + ",1]"), 0.05) * val(stringVariableName(p + "i_rd[1]"), 0.05)
-    + val(stringVariableName(p + "L_rd[" + String(r) + ",2]"), 0.05) * val(stringVariableName(p + "i_rd[2]"), 0.05);
-  print("psi_rd[" + String(r) + "] = " + String(lhs) + ", L_md*i_s[1] + L_rd*i_rd = " + String(rhs) + "\n");
-end for;
-for v in {"L_rd[1,1]", "L_rd[1,2]", "L_rd[2,1]", "L_rd[2,2]", "L_md[1]", "L_md[2]", "i_s[1]", "i_rd[1]", "i_rd[2]"} loop
-  print(v + " = " + String(val(stringVariableName(p + v), 0.05)) + "\n");
+for tol in {1e-6, 1e-10} loop
+  res := simulate(PowerSystems.Examples.AC3ph.Generation.GenOrder3and7, tolerance=tol, fileNamePrefix="g", simflags="-emit_protected");
+  print(res.messages + getErrorString());
+  print("tolerance " + String(tol) + "\n");
+  for v in {"turboGen2.generator.powerAngle", "turboGen1.generator.powerAngle", "relayGrd.y[1]", "switchGrd2.switch_a.closed"} loop
+    print("  " + v + " " + String(val(stringVariableName(v), 0.099), significantDigits=10)
+      + " " + String(val(stringVariableName(v), 0.101), significantDigits=10)
+      + " " + String(val(stringVariableName(v), 0.105), significantDigits=10) + "\n");
+  end for;
 end for;
